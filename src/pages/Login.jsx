@@ -17,12 +17,8 @@ export default function Login() {
     const { error: err, data } = await supabase.auth.signInWithPassword({ email, password })
     if (err) { setError('Email ou senha incorretos.'); setLoading(false); return }
 
-    // Verifica role do barbeiro
     const { data: barber } = await supabase
-      .from('barbers')
-      .select('role')
-      .eq('user_id', data.user.id)
-      .single()
+      .from('barbers').select('role').eq('user_id', data.user.id).single()
 
     setLoading(false)
     if (barber?.role === 'admin') navigate('/admin')
@@ -32,20 +28,45 @@ export default function Login() {
   return (
     <div className="login-page">
       <div className="login-box">
-        <div className="login-logo">MK e BALÃO</div>
-        <div className="login-sub">Área Restrita</div>
 
+        {/* Logo */}
+        <div className="login-logo-wrap">
+          <img className="login-logo-img" src="/logo-semfundo.png" alt="MK e BALÃO" />
+          <div className="login-logo-name">MK e BALÃO</div>
+          <div className="login-logo-sub">Área Restrita</div>
+        </div>
+
+        {/* Barber pole divider */}
+        <div className="barber-pole-bg login-pole" />
+
+        {/* Form */}
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
-            <label>Email</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="username" />
+            <label className="mk-label">Email</label>
+            <input
+              className="mk-input"
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              autoComplete="username"
+              placeholder="seu@email.com"
+            />
           </div>
           <div className="form-group">
-            <label>Senha</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required autoComplete="current-password" />
+            <label className="mk-label">Senha</label>
+            <input
+              className="mk-input"
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+              placeholder="••••••••"
+            />
           </div>
           {error && <div className="form-error">{error}</div>}
-          <button type="submit" className="btn-primary" disabled={loading}>
+          <button type="submit" className="btn-primary" disabled={loading} style={{ width: '100%' }}>
             {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </form>

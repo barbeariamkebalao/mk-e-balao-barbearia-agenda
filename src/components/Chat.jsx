@@ -3,31 +3,34 @@ import { useEffect, useRef } from 'react'
 export function ChatBubble({ from, children }) {
   return (
     <div className={`chat-bubble chat-bubble--${from}`}>
-      {from === 'bot' && <span className="chat-bubble__icon">✂</span>}
+      {from === 'bot' && <div className="chat-bubble__avatar">✂</div>}
       <div className="chat-bubble__text">{children}</div>
+      {from === 'user' && <div className="chat-bubble__avatar">👤</div>}
     </div>
   )
 }
 
 export function TypingIndicator() {
   return (
-    <div className="chat-bubble chat-bubble--bot">
-      <span className="chat-bubble__icon">✂</span>
-      <div className="chat-typing">
-        <span /><span /><span />
+    <div className="typing-indicator">
+      <div className="typing-avatar">✂</div>
+      <div className="typing-dots">
+        <span className="typing-dot" />
+        <span className="typing-dot" />
+        <span className="typing-dot" />
       </div>
     </div>
   )
 }
 
-export function ChatActions({ actions }) {
+export function ChatActions({ actions, layout = 'list' }) {
   return (
-    <div className="chat-actions">
+    <div className={layout === 'grid' ? 'action-grid' : 'action-list'}>
       {actions.map((a, i) => (
         <button
           key={i}
           type="button"
-          className={`chat-action-btn${a.variant === 'primary' ? ' chat-action-btn--primary' : ''}`}
+          className={`chat-action-btn${a.variant === 'primary' ? ' primary' : ''}${a.selected ? ' selected' : ''}`}
           onClick={a.onClick}
           disabled={a.disabled}
         >
@@ -40,28 +43,31 @@ export function ChatActions({ actions }) {
 
 export function ChatInput({ value, onChange, onSubmit, placeholder, type = 'text' }) {
   return (
-    <form className="chat-input-row" onSubmit={onSubmit}>
+    <form className="chat-input-wrap" onSubmit={onSubmit}>
       <input
-        className="chat-input"
+        className="mk-input"
         type={type}
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
         autoFocus
       />
-      <button type="submit" className="chat-send-btn">→</button>
+      <button type="submit" className="chat-send">→</button>
     </form>
   )
 }
 
-export function ChatScroller({ children }) {
+export function ChatWindow({ children }) {
   const ref = useRef(null)
   useEffect(() => {
     if (ref.current) ref.current.scrollTop = ref.current.scrollHeight
   })
   return (
-    <div className="chat-scroller" ref={ref}>
+    <div className="chat-window" ref={ref}>
       {children}
     </div>
   )
 }
+
+// Keep backward-compat alias
+export const ChatScroller = ChatWindow

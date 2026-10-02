@@ -45,7 +45,7 @@ export default function Confirm() {
         <div className="confirm-actions">
           {barber?.phone && (
             <a
-              className="btn-whatsapp"
+              className="btn-wa"
               href={`https://wa.me/${barber.phone}?text=${waMsg}`}
               target="_blank"
               rel="noreferrer"

@@ -1,12 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { supabase } from './lib/supabase'
+import Home    from './pages/Home'
 import Booking  from './pages/Booking'
 import Cancel   from './pages/Cancel'
 import Confirm  from './pages/Confirm'
 import Login    from './pages/Login'
-import Admin    from './pages/Admin'
-import Barbeiro from './pages/Barbeiro'
+import Admin           from './pages/Admin'
+import Barbeiro        from './pages/Barbeiro'
+import AgendarBarbeiro from './pages/AgendarBarbeiro'
 
 function RequireAuth({ children, adminOnly = false }) {
   const [state, setState] = useState('loading') // loading | authed | denied
@@ -45,10 +47,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/"                   element={<Booking />} />
+        <Route path="/"                   element={<Home />} />
         <Route path="/agendar"            element={<Booking />} />
         <Route path="/confirmado"         element={<Confirm />} />
         <Route path="/cancelar/:token"    element={<Cancel />} />
+        <Route path="/agendar/:slug"      element={<AgendarBarbeiro />} />
         <Route path="/login"              element={<Login />} />
         <Route path="/admin"              element={
           <RequireAuth adminOnly={true}>
