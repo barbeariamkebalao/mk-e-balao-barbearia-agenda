@@ -1,733 +1,158 @@
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { formatDateLabel } from '../lib/slots'
+import { STATUS_LABEL, STATUS_CYCLE } from './admin/constants'
+import ServicosPanel      from './admin/ServicosPanel'
+import EquipePanel        from './admin/EquipePanel'
+import BarberServicesPanel from './admin/BarberServicesPanel'
+import AnalyticsPanel     from './admin/AnalyticsPanel'
+import AgendaPanel        from './admin/AgendaPanel'
+import ConfigPanel        from './admin/ConfigPanel'
+import ClubePanel         from './admin/ClubePanel'
+import ChatAgendaPanel    from './admin/ChatAgendaPanel'
+import FiadoPanel         from './admin/FiadoPanel'
+import GaleriaPanel       from './admin/GaleriaPanel'
 
-const STATUS_LABEL = { pendente: 'Pendente', confirmado: 'Confirmado', concluido: 'Concluído', cancelado: 'Cancelado' }
-const STATUS_CYCLE = { pendente: 'confirmado', confirmado: 'concluido', concluido: 'concluido', cancelado: 'cancelado' }
-const DAYS_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
-const CAT_LABEL = { cabelo: 'Cabelo', barba: 'Barba', combo: 'Combo', colorimetria: 'Colorimetria', adicional: 'Adicional' }
+const PAGE_SIZE = 50
 
-// ── SERVIÇOS ───────────────────────────────────────────────────
-function ServicosPanel() {
-  const [services, setServices] = useState([])
-  const [editing, setEditing] = useState(null)
-  const [draft, setDraft] = useState({})
-  const [saving, setSaving] = useState(false)
-  const [msg, setMsg] = useState('')
-
-  useEffect(() => { load() }, [])
-
-  async function load() {
-    const { data } = await supabase.from('services').select('*').order('sort_order')
-    setServices(data || [])
-  }
-
-  function startEdit(svc) {
-    setEditing(svc.id)
-    setDraft({ price: svc.price, price_type: svc.price_type, description: svc.description || '', active: svc.active })
-    setMsg('')
-  }
-
-  async function save(id) {
-    setSaving(true)
-    const { error } = await supabase.from('services').update({
-      price: Number(draft.price), price_type: draft.price_type,
-      description: draft.description, active: draft.active,
-    }).eq('id', id)
-    setSaving(false)
-    if (error) { setMsg('Erro ao salvar.'); return }
-    setEditing(null); setMsg('Salvo!'); load()
-    setTimeout(() => setMsg(''), 2500)
-  }
-
-  const grouped = services.reduce((acc, s) => {
-    acc[s.category] = acc[s.category] || []
-    acc[s.category].push(s)
-    return acc
-  }, {})
-
-  return (
-    <div className="mgmt-panel">
-      {msg && <div className="mgmt-toast">{msg}</div>}
-      {Object.entries(grouped).map(([cat, items]) => (
-        <div key={cat} className="mgmt-group">
-          <div className="mgmt-group__title">{CAT_LABEL[cat] || cat}</div>
-          {items.map(svc => (
-            <div key={svc.id} className={`mgmt-row${!svc.active ? ' mgmt-row--inactive' : ''}`}>
-              <div className="mgmt-row__main">
-                <div className="mgmt-row__name">
-                  {svc.name}
-                  {svc.is_addon && <span className="mgmt-badge">adicional</span>}
-                </div>
-                {editing === svc.id ? (
-                  <div className="mgmt-edit-form">
-                    <div className="mgmt-field-row">
-                      <div className="mgmt-field">
-                        <label>Preço (R$)</label>
-                        <input type="number" step="0.01" min="0" value={draft.price}
-                          onChange={e => setDraft(d => ({ ...d, price: e.target.value }))} />
-                      </div>
-                      <div className="mgmt-field">
-                        <label>Tipo</label>
-                        <select value={draft.price_type}
-                          onChange={e => setDraft(d => ({ ...d, price_type: e.target.value }))}>
-                          <option value="fixed">Fixo</option>
-                          <option value="from">A partir de</option>
-                        </select>
-                      </div>
-                      <div className="mgmt-field">
-                        <label>Status</label>
-                        <label className="mgmt-toggle">
-                          <input type="checkbox" checked={draft.active}
-                            onChange={e => setDraft(d => ({ ...d, active: e.target.checked }))} />
-                          <span>{draft.active ? 'Ativo' : 'Inativo'}</span>
-                        </label>
-                      </div>
-                    </div>
-                    <div className="mgmt-field mgmt-field--full">
-                      <label>Descrição</label>
-                      <textarea value={draft.description} rows={2}
-                        onChange={e => setDraft(d => ({ ...d, description: e.target.value }))} />
-                    </div>
-                    <div className="mgmt-actions">
-                      <button className="mgmt-btn mgmt-btn--save" onClick={() => save(svc.id)} disabled={saving}>
-                        {saving ? 'Salvando…' : 'Salvar'}
-                      </button>
-                      <button className="mgmt-btn mgmt-btn--ghost" onClick={() => setEditing(null)}>Cancelar</button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="mgmt-row__desc">{svc.description}</div>
-                )}
-              </div>
-              {editing !== svc.id && (
-                <div className="mgmt-row__side">
-                  <div className="mgmt-row__price">
-                    {svc.price_type === 'from' && <span className="mgmt-from">a partir de</span>}
-                    R$ {Number(svc.price).toFixed(2).replace('.', ',')}
-                  </div>
-                  <span className={`pill pill--${svc.active ? 'confirmado' : 'cancelado'}`}>
-                    {svc.active ? 'Ativo' : 'Inativo'}
-                  </span>
-                  <button className="mgmt-edit-btn" onClick={() => startEdit(svc)}>Editar</button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
-  )
+function getGreeting(barberName) {
+  const h = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' })).getHours()
+  const period = h < 12 ? 'manhã' : h < 18 ? 'tarde' : 'noite'
+  const first = (barberName || 'Admin').split(' ')[0]
+  return `Boa ${period}, ${first}!`
 }
 
-// ── EQUIPE ─────────────────────────────────────────────────────
-function EquipePanel() {
-  const [barbers, setBarbers] = useState([])
-  const [editing, setEditing] = useState(null)
-  const [draft, setDraft] = useState({})
-  const [uploading, setUploading] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [msg, setMsg] = useState('')
-  const fileRef = useRef()
-
-  useEffect(() => { load() }, [])
-
-  async function load() {
-    const { data } = await supabase.from('barbers').select('*').order('sort_order')
-    setBarbers((data || []).filter(b => b.role !== 'admin'))
-  }
-
-  function startEdit(b) {
-    setEditing(b.id)
-    setDraft({ bio: b.bio || '', quote: b.quote || '', speciality: b.speciality || '', avatar_url: b.avatar_url || '' })
-    setMsg('')
-  }
-
-  async function uploadPhoto(file) {
-    const b = barbers.find(x => x.id === editing)
-    if (!b) return
-    setUploading(true)
-    const ext = file.name.split('.').pop()
-    const path = `barbeiro-${b.slug}.${ext}`
-    const { error } = await supabase.storage.from('barber-images').upload(path, file, { upsert: true, contentType: file.type })
-    if (error) { setMsg('Erro no upload.'); setUploading(false); return }
-    const { data: { publicUrl } } = supabase.storage.from('barber-images').getPublicUrl(path)
-    setDraft(d => ({ ...d, avatar_url: publicUrl }))
-    setUploading(false)
-    setMsg('Foto carregada — clique em Salvar para confirmar.')
-  }
-
-  async function save(id) {
-    setSaving(true)
-    const { error } = await supabase.from('barbers').update({
-      bio: draft.bio, quote: draft.quote, speciality: draft.speciality, avatar_url: draft.avatar_url,
-    }).eq('id', id)
-    setSaving(false)
-    if (error) { setMsg('Erro ao salvar.'); return }
-    setEditing(null); setMsg('Perfil atualizado!'); load()
-    setTimeout(() => setMsg(''), 2500)
-  }
-
-  return (
-    <div className="mgmt-panel">
-      {msg && <div className="mgmt-toast">{msg}</div>}
-      <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
-        onChange={e => { const f = e.target.files[0]; if (f) uploadPhoto(f); e.target.value = '' }} />
-      {barbers.map(b => (
-        <div key={b.id} className="mgmt-barber-card">
-          <div className="mgmt-barber-card__avatar">
-            <img src={editing === b.id ? draft.avatar_url || b.avatar_url : b.avatar_url}
-              alt={b.name} onError={e => { e.target.src = '/logo-escudo.jpg' }} />
-            {editing === b.id && (
-              <button className="mgmt-photo-btn" onClick={() => fileRef.current.click()} disabled={uploading} title="Trocar foto">
-                {uploading ? '…' : '📷'}
-              </button>
-            )}
-          </div>
-          <div className="mgmt-barber-card__body">
-            <div className="mgmt-barber-card__name">{b.name}</div>
-            {editing === b.id ? (
-              <div className="mgmt-edit-form">
-                <div className="mgmt-field mgmt-field--full">
-                  <label>Especialidade</label>
-                  <input value={draft.speciality} onChange={e => setDraft(d => ({ ...d, speciality: e.target.value }))} />
-                </div>
-                <div className="mgmt-field mgmt-field--full">
-                  <label>Frase do barbeiro</label>
-                  <input value={draft.quote} onChange={e => setDraft(d => ({ ...d, quote: e.target.value }))} />
-                </div>
-                <div className="mgmt-field mgmt-field--full">
-                  <label>Bio</label>
-                  <textarea value={draft.bio} rows={3} onChange={e => setDraft(d => ({ ...d, bio: e.target.value }))} />
-                </div>
-                <div className="mgmt-actions">
-                  <button className="mgmt-btn mgmt-btn--save" onClick={() => save(b.id)} disabled={saving}>
-                    {saving ? 'Salvando…' : 'Salvar'}
-                  </button>
-                  <button className="mgmt-btn mgmt-btn--ghost" onClick={() => setEditing(null)}>Cancelar</button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="mgmt-barber-card__speciality">{b.speciality}</div>
-                <div className="mgmt-barber-card__quote">"{b.quote}"</div>
-                <div className="mgmt-barber-card__bio">{b.bio}</div>
-                <button className="mgmt-edit-btn" onClick={() => startEdit(b)}>Editar perfil</button>
-              </>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// ── ANALYTICS ──────────────────────────────────────────────────
-function AnalyticsPanel() {
-  const [period, setPeriod] = useState('mes')
-  const [stats, setStats] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => { load() }, [period])
-
-  function periodFrom(p) {
-    const now = new Date()
-    if (p === 'semana') {
-      const d = new Date(now); d.setDate(d.getDate() - d.getDay()); return d.toISOString().split('T')[0]
-    }
-    if (p === 'mes') return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
-    if (p === '30d') { const d = new Date(now); d.setDate(d.getDate() - 30); return d.toISOString().split('T')[0] }
-    return null
-  }
-
-  async function load() {
-    setLoading(true)
-    const from = periodFrom(period)
-
-    let q = supabase.from('bookings').select('*, barbers(name)')
-    if (from) q = q.gte('date', from)
-    const { data: all } = await q.order('date')
-
-    const bookings = (all || []).filter(b => b.status !== 'cancelado')
-    const cancelled = (all || []).filter(b => b.status === 'cancelado')
-
-    const receita = bookings.reduce((s, b) => s + Number(b.total), 0)
-    const ticketMedio = bookings.length > 0 ? receita / bookings.length : 0
-    const cancelRate = all?.length > 0 ? Math.round((cancelled.length / all.length) * 100) : 0
-
-    const byBarber = {}
-    bookings.forEach(b => {
-      const k = b.barbers?.name || '—'
-      byBarber[k] = byBarber[k] || { name: k, count: 0, receita: 0 }
-      byBarber[k].count++
-      byBarber[k].receita += Number(b.total)
-    })
-
-    setStats({
-      total: bookings.length, receita, ticketMedio, cancelRate,
-      barbers: Object.values(byBarber).sort((a, b) => b.receita - a.receita),
-    })
-    setLoading(false)
-  }
-
-  const PERIODS = [
-    ['semana', 'Esta semana'], ['mes', 'Este mês'], ['30d', 'Últimos 30 dias'], ['total', 'Todo período'],
-  ]
-
-  const maxReceita = stats?.barbers?.[0]?.receita || 1
-
-  return (
-    <div className="mgmt-panel">
-      <div className="admin-filters">
-        {PERIODS.map(([k, l]) => (
-          <button key={k} className={`filter-chip${period === k ? ' active' : ''}`} onClick={() => setPeriod(k)}>{l}</button>
-        ))}
-      </div>
-
-      {loading ? <div className="admin-loading">Carregando…</div> : !stats ? null : (
-        <>
-          <div className="analytics-kpi-grid">
-            <div className="kpi-card">
-              <div className="kpi-label">Receita</div>
-              <div className="kpi-value kpi-value--gold">R$ {stats.receita.toFixed(2).replace('.', ',')}</div>
-            </div>
-            <div className="kpi-card">
-              <div className="kpi-label">Agendamentos</div>
-              <div className="kpi-value">{stats.total}</div>
-            </div>
-            <div className="kpi-card">
-              <div className="kpi-label">Ticket médio</div>
-              <div className="kpi-value">R$ {stats.ticketMedio.toFixed(2).replace('.', ',')}</div>
-            </div>
-            <div className="kpi-card">
-              <div className="kpi-label">Cancelamentos</div>
-              <div className="kpi-value">{stats.cancelRate}%</div>
-            </div>
-          </div>
-
-          {stats.barbers.length > 0 && (
-            <div className="mgmt-group">
-              <div className="mgmt-group__title">Por Barbeiro</div>
-              <div className="analytics-barber-list">
-                {stats.barbers.map(b => (
-                  <div key={b.name} className="analytics-barber-row">
-                    <div className="analytics-barber-name">{b.name}</div>
-                    <div className="analytics-bar-wrap">
-                      <div className="analytics-bar" style={{ width: `${(b.receita / maxReceita) * 100}%` }} />
-                    </div>
-                    <div className="analytics-barber-stats">
-                      <span>{b.count} atend.</span>
-                      <span className="kpi-value--gold">R$ {b.receita.toFixed(2).replace('.', ',')}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {stats.total === 0 && (
-            <div className="mgmt-empty">Nenhum agendamento no período selecionado.</div>
-          )}
-        </>
-      )}
-    </div>
-  )
-}
-
-// ── AGENDA (disponibilidade) ────────────────────────────────────
-function AgendaPanel() {
-  const [barbers, setBarbers] = useState([])
-  const [avail, setAvail] = useState({})
-  const [saving, setSaving] = useState(null)
-  const [msg, setMsg] = useState('')
-
-  useEffect(() => { load() }, [])
-
-  async function load() {
-    const [{ data: b }, { data: a }] = await Promise.all([
-      supabase.from('barbers').select('*').neq('role', 'admin').order('sort_order'),
-      supabase.from('availability').select('*'),
-    ])
-    setBarbers(b || [])
-    const map = {}
-    for (const row of (a || [])) {
-      map[row.barber_id] = map[row.barber_id] || {}
-      map[row.barber_id][row.day_of_week] = { ...row }
-    }
-    setAvail(map)
-  }
-
-  function updateSlot(barberId, day, field, value) {
-    setAvail(prev => ({
-      ...prev,
-      [barberId]: {
-        ...(prev[barberId] || {}),
-        [day]: {
-          start_time: '09:00', end_time: '19:00', active: false,
-          ...(prev[barberId]?.[day] || {}),
-          barber_id: barberId, day_of_week: day, [field]: value,
-        },
-      },
-    }))
-  }
-
-  async function saveBarber(barberId) {
-    setSaving(barberId)
-    const rows = Object.values(avail[barberId] || {})
-    for (const row of rows) {
-      await supabase.from('availability').upsert(
-        { barber_id: barberId, day_of_week: row.day_of_week, start_time: row.start_time, end_time: row.end_time, active: row.active },
-        { onConflict: 'barber_id,day_of_week' }
-      )
-    }
-    setSaving(null)
-    setMsg('Agenda salva!')
-    setTimeout(() => setMsg(''), 2500)
-  }
-
-  return (
-    <div className="mgmt-panel">
-      {msg && <div className="mgmt-toast">{msg}</div>}
-      {barbers.map(b => {
-        const bAvail = avail[b.id] || {}
-        return (
-          <div key={b.id} className="mgmt-group">
-            <div className="mgmt-group__title">{b.name}</div>
-            <div className="avail-grid">
-              {[0, 1, 2, 3, 4, 5, 6].map(day => {
-                const slot = bAvail[day] || { start_time: '09:00', end_time: '19:00', active: false }
-                return (
-                  <div key={day} className={`avail-day${slot.active ? ' avail-day--open' : ''}`}>
-                    <div className="avail-day__label">{DAYS_PT[day]}</div>
-                    <label className="mgmt-toggle">
-                      <input type="checkbox" checked={!!slot.active}
-                        onChange={e => updateSlot(b.id, day, 'active', e.target.checked)} />
-                      <span>{slot.active ? 'Aberto' : 'Fechado'}</span>
-                    </label>
-                    {slot.active && (
-                      <div className="avail-times">
-                        <input type="time" className="avail-time-input" value={slot.start_time}
-                          onChange={e => updateSlot(b.id, day, 'start_time', e.target.value)} />
-                        <span className="avail-sep">–</span>
-                        <input type="time" className="avail-time-input" value={slot.end_time}
-                          onChange={e => updateSlot(b.id, day, 'end_time', e.target.value)} />
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-            <div className="mgmt-actions" style={{ padding: '1rem' }}>
-              <button className="mgmt-btn mgmt-btn--save" onClick={() => saveBarber(b.id)} disabled={saving === b.id}>
-                {saving === b.id ? 'Salvando…' : `Salvar agenda de ${b.name.split(' ')[0]}`}
-              </button>
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-// ── CONFIG ────────────────────────────────────────────────────
-function ConfigPanel() {
-  const [settings, setSettings] = useState(null)
-  const [blocked, setBlocked] = useState([])
-  const [newDate, setNewDate] = useState('')
-  const [newReason, setNewReason] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [msg, setMsg] = useState('')
-
-  useEffect(() => { load() }, [])
-
-  async function load() {
-    const [{ data: s }, { data: bd }] = await Promise.all([
-      supabase.from('settings').select('*').eq('id', 1).single(),
-      supabase.from('blocked_dates').select('*').is('barber_id', null).order('date'),
-    ])
-    setSettings(s || {})
-    setBlocked(bd || [])
-  }
-
-  async function saveSettings() {
-    setSaving(true)
-    const { id: _, ...payload } = settings
-    const { error } = await supabase.from('settings').update(payload).eq('id', 1)
-    setSaving(false)
-    if (error) { setMsg('Erro ao salvar.'); return }
-    setMsg('Configurações salvas!')
-    setTimeout(() => setMsg(''), 2500)
-  }
-
-  async function addBlocked() {
-    if (!newDate) return
-    await supabase.from('blocked_dates').insert({ barber_id: null, date: newDate, reason: newReason || null })
-    setNewDate(''); setNewReason(''); load()
-  }
-
-  async function removeBlocked(id) {
-    if (!confirm('Remover este bloqueio?')) return
-    await supabase.from('blocked_dates').delete().eq('id', id); load()
-  }
-
-  if (!settings) return <div className="admin-loading">Carregando…</div>
-
-  const FIELDS = [
-    { key: 'name',           label: 'Nome da barbearia' },
-    { key: 'tagline',        label: 'Tagline' },
-    { key: 'address',        label: 'Endereço' },
-    { key: 'city',           label: 'Cidade — UF' },
-    { key: 'whatsapp',       label: 'WhatsApp (DDI+DDD+número)' },
-    { key: 'hours_weekday',  label: 'Horário Seg–Sex' },
-    { key: 'hours_saturday', label: 'Horário Sábado' },
-    { key: 'instagram',      label: 'Instagram (URL)' },
-    { key: 'maps_url',       label: 'Google Maps (URL)' },
-  ]
-
-  return (
-    <div className="mgmt-panel">
-      {msg && <div className="mgmt-toast">{msg}</div>}
-      <div className="mgmt-group">
-        <div className="mgmt-group__title">Informações da Barbearia</div>
-        <div className="mgmt-settings-grid">
-          {FIELDS.map(f => (
-            <div key={f.key} className="mgmt-field mgmt-field--full">
-              <label>{f.label}</label>
-              <input value={settings[f.key] || ''}
-                onChange={e => setSettings(s => ({ ...s, [f.key]: e.target.value }))} />
-            </div>
-          ))}
-        </div>
-        <div className="mgmt-actions" style={{ padding: '0 1rem 1rem' }}>
-          <button className="mgmt-btn mgmt-btn--save" onClick={saveSettings} disabled={saving}>
-            {saving ? 'Salvando…' : 'Salvar configurações'}
-          </button>
-        </div>
-      </div>
-      <div className="mgmt-group">
-        <div className="mgmt-group__title">Dias Bloqueados — Barbearia Fechada</div>
-        <div className="mgmt-blocked-form">
-          <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} />
-          <input type="text" placeholder="Motivo (ex: Feriado, Férias…)" value={newReason}
-            onChange={e => setNewReason(e.target.value)} />
-          <button className="mgmt-btn mgmt-btn--save" onClick={addBlocked}>+ Bloquear</button>
-        </div>
-        {blocked.length === 0 ? (
-          <div className="mgmt-empty">Nenhum dia bloqueado no momento.</div>
-        ) : (
-          <div className="mgmt-blocked-list">
-            {blocked.map(bd => (
-              <div key={bd.id} className="mgmt-blocked-item">
-                <span className="mgmt-blocked-date">
-                  {new Date(bd.date + 'T12:00:00').toLocaleDateString('pt-BR', {
-                    weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
-                  })}
-                </span>
-                <span className="mgmt-blocked-reason">{bd.reason || '—'}</span>
-                <button className="mgmt-remove-btn" onClick={() => removeBlocked(bd.id)}>×</button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// ── CLUBE ─────────────────────────────────────────────────────
-function PlanForm({ draft, setDraft, onSave, onCancel, saving }) {
-  return (
-    <div className="mgmt-edit-form" style={{ padding: '1rem' }}>
-      <div className="mgmt-field-row">
-        <div className="mgmt-field">
-          <label>Nome do plano</label>
-          <input value={draft.name || ''} onChange={e => setDraft(d => ({ ...d, name: e.target.value }))} />
-        </div>
-        <div className="mgmt-field">
-          <label>Tagline</label>
-          <input value={draft.tagline || ''} onChange={e => setDraft(d => ({ ...d, tagline: e.target.value }))} />
-        </div>
-      </div>
-      <div className="mgmt-field mgmt-field--full">
-        <label>Benefícios (um por linha)</label>
-        <textarea rows={5} value={draft.features_text || ''}
-          onChange={e => setDraft(d => ({ ...d, features_text: e.target.value }))}
-          placeholder="2 Cortes no mês&#10;1 Barba Completa&#10;10% OFF em Produtos" />
-      </div>
-      <div className="mgmt-field-row">
-        <div className="mgmt-field">
-          <label>Telefone WhatsApp (CTA)</label>
-          <input value={draft.cta_phone || ''} onChange={e => setDraft(d => ({ ...d, cta_phone: e.target.value }))} placeholder="5514999999999" />
-        </div>
-        <div className="mgmt-field">
-          <label>Texto CTA</label>
-          <input value={draft.cta_text || ''} onChange={e => setDraft(d => ({ ...d, cta_text: e.target.value }))} placeholder="GARANTIR PLANO" />
-        </div>
-      </div>
-      <div className="mgmt-field mgmt-field--full">
-        <label>Mensagem WhatsApp</label>
-        <input value={draft.cta_message || ''} onChange={e => setDraft(d => ({ ...d, cta_message: e.target.value }))} />
-      </div>
-      <div className="mgmt-field-row">
-        <div className="mgmt-field">
-          <label>Ordem</label>
-          <input type="number" value={draft.sort_order || 0} onChange={e => setDraft(d => ({ ...d, sort_order: e.target.value }))} />
-        </div>
-        <div className="mgmt-field" style={{ justifyContent: 'flex-end' }}>
-          <label>&nbsp;</label>
-          <label className="mgmt-toggle">
-            <input type="checkbox" checked={!!draft.highlight}
-              onChange={e => setDraft(d => ({ ...d, highlight: e.target.checked }))} />
-            <span>Destaque</span>
-          </label>
-        </div>
-        <div className="mgmt-field" style={{ justifyContent: 'flex-end' }}>
-          <label>&nbsp;</label>
-          <label className="mgmt-toggle">
-            <input type="checkbox" checked={draft.active !== false}
-              onChange={e => setDraft(d => ({ ...d, active: e.target.checked }))} />
-            <span>Ativo</span>
-          </label>
-        </div>
-      </div>
-      <div className="mgmt-actions">
-        <button className="mgmt-btn mgmt-btn--save" onClick={onSave} disabled={saving}>
-          {saving ? 'Salvando…' : 'Salvar plano'}
-        </button>
-        <button className="mgmt-btn mgmt-btn--ghost" onClick={onCancel}>Cancelar</button>
-      </div>
-    </div>
-  )
-}
-
-function ClubePanel() {
-  const [plans, setPlans] = useState([])
-  const [editing, setEditing] = useState(null)
-  const [draft, setDraft] = useState({})
-  const [saving, setSaving] = useState(false)
-  const [msg, setMsg] = useState('')
-
-  useEffect(() => { load() }, [])
-
-  async function load() {
-    const { data } = await supabase.from('plans').select('*').order('sort_order')
-    setPlans(data || [])
-  }
-
-  function startNew() {
-    setEditing('new')
-    setDraft({ name: '', tagline: '', features_text: '', cta_text: '', cta_phone: '', cta_message: '', highlight: false, active: true, sort_order: plans.length + 1 })
-    setMsg('')
-  }
-
-  function startEdit(p) {
-    setEditing(p.id)
-    setDraft({ ...p, features_text: (p.features || []).join('\n') })
-    setMsg('')
-  }
-
-  async function save() {
-    setSaving(true)
-    const payload = {
-      name: draft.name,
-      slug: draft.slug || draft.name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '-'),
-      tagline: draft.tagline,
-      features: (draft.features_text || '').split('\n').map(f => f.trim()).filter(Boolean),
-      cta_text: draft.cta_text,
-      cta_phone: draft.cta_phone,
-      cta_message: draft.cta_message,
-      highlight: draft.highlight,
-      active: draft.active !== false,
-      sort_order: Number(draft.sort_order) || 0,
-    }
-    const { error } = editing === 'new'
-      ? await supabase.from('plans').insert(payload)
-      : await supabase.from('plans').update(payload).eq('id', editing)
-    setSaving(false)
-    if (error) { setMsg('Erro ao salvar.'); return }
-    setEditing(null)
-    setMsg(editing === 'new' ? 'Plano criado!' : 'Plano atualizado!')
-    load()
-    setTimeout(() => setMsg(''), 2500)
-  }
-
-  async function deletePlan(id) {
-    if (!confirm('Excluir este plano?')) return
-    await supabase.from('plans').delete().eq('id', id); load()
-  }
-
-  return (
-    <div className="mgmt-panel">
-      {msg && <div className="mgmt-toast">{msg}</div>}
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <button className="mgmt-btn mgmt-btn--save" onClick={startNew}>+ Novo Plano</button>
-      </div>
-      {editing === 'new' && (
-        <div className="mgmt-group">
-          <div className="mgmt-group__title">Novo Plano</div>
-          <PlanForm draft={draft} setDraft={setDraft} onSave={save} onCancel={() => setEditing(null)} saving={saving} />
-        </div>
-      )}
-      {plans.map(p => (
-        <div key={p.id} className={`mgmt-plan-card${p.highlight ? ' mgmt-plan-card--highlight' : ''}`}>
-          {editing === p.id ? (
-            <>
-              <div className="mgmt-group__title" style={{ padding: '0.625rem 1rem', borderBottom: '2px solid var(--border)' }}>Editando: {p.name}</div>
-              <PlanForm draft={draft} setDraft={setDraft} onSave={save} onCancel={() => setEditing(null)} saving={saving} />
-            </>
-          ) : (
-            <div style={{ padding: '1rem' }}>
-              <div className="mgmt-plan-card__header">
-                <div>
-                  <div className="mgmt-plan-card__name">{p.name}</div>
-                  <div className="mgmt-barber-card__speciality" style={{ marginBottom: 0 }}>{p.tagline}</div>
-                </div>
-                {p.highlight && <span className="mgmt-badge" style={{ color: 'var(--gold)', borderColor: 'var(--gold)' }}>destaque</span>}
-              </div>
-              <ul className="mgmt-plan-card__features">
-                {(p.features || []).map((f, i) => <li key={i}>{f}</li>)}
-              </ul>
-              <div className="mgmt-actions" style={{ marginTop: '0.75rem' }}>
-                <button className="mgmt-edit-btn" onClick={() => startEdit(p)}>Editar</button>
-                <button className="mgmt-btn mgmt-btn--ghost" onClick={() => deletePlan(p.id)}>Excluir</button>
-              </div>
-            </div>
-          )}
-        </div>
-      ))}
-      {plans.length === 0 && !editing && (
-        <div className="mgmt-empty">Nenhum plano cadastrado. Clique em "+ Novo Plano" para começar.</div>
-      )}
-    </div>
-  )
-}
-
-// ── ADMIN (main) ───────────────────────────────────────────────
 export default function Admin({ barber }) {
-  const [tab,      setTab]      = useState('hoje')
-  const [bookings, setBookings] = useState([])
+  const navigate    = useNavigate()
+  const [tab,       setTab]       = useState('hoje')
+  const [bookings,  setBookings]  = useState([])
   const [allBarbers, setAllBarbers] = useState([])
-  const [loading,  setLoading]  = useState(true)
-  const [filter,   setFilter]   = useState('todos')
-  const [search,   setSearch]   = useState('')
+  const [loading,   setLoading]   = useState(true)
+  const [filter,    setFilter]    = useState('todos')
+  const [search,    setSearch]    = useState('')
+  const [navOpen,   setNavOpen]   = useState(false)
+  const [actionState, setActionState] = useState({})
+  const [page,      setPage]      = useState(0)
+  const [totalCount, setTotalCount] = useState(null)
+  const [realtimeMsg, setRealtimeMsg] = useState(null)
+  const [installPrompt, setInstallPrompt] = useState(null)
+  const [installable,   setInstallable]   = useState(false)
+  const [kpiMonth,      setKpiMonth]      = useState(null)
+  const [kpiWeek,       setKpiWeek]       = useState(null)
+  const navRef = useRef()
+  const realtimeTimer = useRef(null)
 
-  const today = new Date().toISOString().split('T')[0]
+  // PWA install prompt
+  useEffect(() => {
+    const onPrompt = (e) => { e.preventDefault(); setInstallPrompt(e); setInstallable(true) }
+    const onInstalled = () => setInstallable(false)
+    window.addEventListener('beforeinstallprompt', onPrompt)
+    window.addEventListener('appinstalled', onInstalled)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onPrompt)
+      window.removeEventListener('appinstalled', onInstalled)
+    }
+  }, [])
+
+  async function handleInstall() {
+    if (!installPrompt) return
+    installPrompt.prompt()
+    const { outcome } = await installPrompt.userChoice
+    if (outcome === 'accepted') setInstallable(false)
+    setInstallPrompt(null)
+  }
+
+  const today       = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' })
   const isBookingTab = tab === 'hoje' || tab === 'todos'
+
+  const monthStart = (() => {
+    const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }))
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
+  })()
+  const weekStart = (() => {
+    const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }))
+    d.setDate(d.getDate() - 6)
+    return d.toLocaleDateString('sv-SE')
+  })()
+
+  // KPIs mensais/semanais — função nomeada para reutilizar no realtime
+  async function loadKpis() {
+    const [{ data: month }, { data: week }] = await Promise.all([
+      supabase.from('bookings').select('total').neq('status', 'cancelado').gte('date', monthStart),
+      supabase.from('bookings').select('total').neq('status', 'cancelado').gte('date', weekStart),
+    ])
+    setKpiMonth({
+      receita: (month || []).reduce((s, b) => s + Number(b.total), 0),
+      count:   (month || []).length,
+    })
+    setKpiWeek({
+      receita: (week || []).reduce((s, b) => s + Number(b.total), 0),
+      count:   (week || []).length,
+    })
+  }
+
+  useEffect(() => { loadKpis() }, [])
+
+  useEffect(() => {
+    function onOutside(e) { if (navRef.current && !navRef.current.contains(e.target)) setNavOpen(false) }
+    function onEscape(e)   { if (e.key === 'Escape') setNavOpen(false) }
+    if (navOpen) {
+      document.addEventListener('mousedown', onOutside)
+      document.addEventListener('keydown',   onEscape)
+    }
+    return () => {
+      document.removeEventListener('mousedown', onOutside)
+      document.removeEventListener('keydown',   onEscape)
+    }
+  }, [navOpen])
 
   useEffect(() => {
     if (isBookingTab) loadBookings()
+    setActionState({})
+    setPage(0)
   }, [tab])
+
+  // Supabase Realtime — auto-refresh on INSERT/UPDATE in bookings
+  useEffect(() => {
+    const channel = supabase
+      .channel('admin-bookings')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, payload => {
+        if (isBookingTab) loadBookings()
+        loadKpis()
+        if (payload.eventType === 'INSERT') {
+          setRealtimeMsg('Novo agendamento recebido')
+          clearTimeout(realtimeTimer.current)
+          realtimeTimer.current = setTimeout(() => setRealtimeMsg(null), 4000)
+        }
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel); clearTimeout(realtimeTimer.current) }
+  }, [tab])
+
+  useEffect(() => {
+    if (tab === 'todos') loadBookings()
+  }, [page])
 
   async function loadBookings() {
     setLoading(true)
     let bkQuery = supabase.from('bookings')
-      .select('*, barbers(name, slug)').order('date').order('time')
-    if (tab === 'hoje') bkQuery = bkQuery.eq('date', today)
-    const [{ data: bk }, { data: br }] = await Promise.all([
+      .select('*, barbers(name, slug)', tab === 'todos' ? { count: 'exact' } : undefined)
+      .order('date').order('time')
+
+    if (tab === 'hoje') {
+      bkQuery = bkQuery.eq('date', today)
+    } else {
+      bkQuery = bkQuery.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
+    }
+
+    const [bkResult, { data: br }] = await Promise.all([
       bkQuery,
       supabase.from('barbers').select('*').order('sort_order'),
     ])
-    setBookings(bk || [])
+
+    setBookings(bkResult.data || [])
+    if (tab === 'todos') setTotalCount(bkResult.count ?? null)
     setAllBarbers(br || [])
     setLoading(false)
   }
@@ -735,14 +160,28 @@ export default function Admin({ barber }) {
   async function advanceStatus(id, current) {
     const next = STATUS_CYCLE[current]
     if (next === current) return
-    await supabase.from('bookings').update({ status: next }).eq('id', id)
-    loadBookings()
+    setActionState(s => ({ ...s, [id]: 'loading' }))
+    const { error } = await supabase.from('bookings').update({ status: next }).eq('id', id)
+    if (error) {
+      setActionState(s => ({ ...s, [id]: 'error' }))
+      setTimeout(() => setActionState(s => ({ ...s, [id]: null })), 3000)
+    } else {
+      setActionState(s => ({ ...s, [id]: null }))
+      loadBookings()
+    }
   }
 
   async function cancelBooking(id) {
     if (!confirm('Cancelar este agendamento?')) return
-    await supabase.from('bookings').update({ status: 'cancelado' }).eq('id', id)
-    loadBookings()
+    setActionState(s => ({ ...s, [id]: 'loading' }))
+    const { error } = await supabase.from('bookings').update({ status: 'cancelado' }).eq('id', id)
+    if (error) {
+      setActionState(s => ({ ...s, [id]: 'error' }))
+      setTimeout(() => setActionState(s => ({ ...s, [id]: null })), 3000)
+    } else {
+      setActionState(s => ({ ...s, [id]: null }))
+      loadBookings()
+    }
   }
 
   async function logout() {
@@ -764,99 +203,240 @@ export default function Admin({ barber }) {
     receita:    bookings.filter(b => b.status !== 'cancelado').reduce((s, b) => s + Number(b.total), 0),
   }
 
-  const NAV = [
-    { icon: '📅', label: 'Hoje',       value: 'hoje' },
-    { icon: '📋', label: 'Todos',      value: 'todos' },
-    { icon: '📊', label: 'Analytics',  value: 'analytics' },
-    { icon: '📆', label: 'Agenda',     value: 'agenda' },
-    { icon: '✂️', label: 'Serviços',   value: 'servicos' },
-    { icon: '👤', label: 'Equipe',     value: 'equipe' },
-    { icon: '🏆', label: 'Clube',      value: 'clube' },
-    { icon: '⚙️', label: 'Config',     value: 'config' },
+  const totalPages = totalCount !== null ? Math.ceil(totalCount / PAGE_SIZE) : null
+
+  const NAV_ITEMS = [
+    { icon: '◈',  label: 'Dashboard',       desc: 'Métricas e agendamentos de hoje',       value: 'hoje'            },
+    { icon: '📅', label: 'Agendamentos',     desc: 'Todos os agendamentos',                 value: 'todos'           },
+    { icon: '📊', label: 'Analytics',        desc: 'Relatórios e métricas do período',      value: 'analytics'       },
+    { icon: '📆', label: 'Disponibilidade',  desc: 'Horários por barbeiro',                 value: 'agenda'          },
+    { icon: '✂',  label: 'Serviços',         desc: 'Preços e catálogo',                     value: 'servicos'        },
+    { icon: '🗃',  label: 'Serv./Barbeiro',  desc: 'Quais serviços cada barbeiro realiza',  value: 'barber_services' },
+    { icon: '👤', label: 'Equipe',           desc: 'Perfis, fotos e dados',                 value: 'equipe'          },
+    { icon: '💬', label: 'Chat & Agenda',    desc: 'Configurações do fluxo de agendamento', value: 'chat'            },
+    { icon: '🏆', label: 'Clube',            desc: 'Planos de assinatura',                  value: 'clube'           },
+    { icon: '📋', label: 'Fiado',           desc: 'Atendimentos a prazo e cobranças',       value: 'fiado'           },
+    { icon: '🖼', label: 'Galeria',         desc: 'Trabalhos recentes — fotos do site',     value: 'galeria'         },
+    { icon: '⚙',  label: 'Configurações',   desc: 'Dados e parâmetros da barbearia',       value: 'config'          },
   ]
 
-  const TAB_TITLE = {
-    hoje:      `Hoje — ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}`,
-    todos:     'Todos os agendamentos',
-    analytics: 'Analytics',
-    agenda:    'Disponibilidade por Barbeiro',
-    servicos:  'Serviços & Preços',
-    equipe:    'Equipe',
-    clube:     'Clube de Assinaturas',
-    config:    'Configurações',
+  const NAV_EXTERNAL = [
+    { icon: '📲', label: 'Social Media', desc: 'Posts e conteúdo visual',   path: '/portal' },
+    { icon: '📖', label: 'Manual',       desc: 'Guia de uso da marca',      path: '/manual' },
+    { icon: '🎨', label: 'Marca',        desc: 'Identidade visual',         path: '/marca'  },
+    { icon: '🗂',  label: 'Hub',         desc: 'Central de links',          path: '/hub'    },
+  ]
+
+  const currentNav = NAV_ITEMS.find(n => n.value === tab) || NAV_ITEMS[0]
+
+  function handleNav(item) {
+    setNavOpen(false)
+    if (item.path) navigate(item.path)
+    else setTab(item.value)
   }
 
   return (
-    <div className="admin-layout">
-      {/* ── Sidebar ── */}
-      <aside className="admin-sidebar">
-        <div className="admin-sidebar__logo">
-          <img src="/logo-semfundo.png" alt="MK e BALÃO" />
-          <div className="admin-sidebar__label">Admin</div>
-        </div>
-        <nav className="admin-sidebar__nav">
-          {NAV.map(n => (
-            <button key={n.value} className={`nav-item${tab === n.value ? ' active' : ''}`} onClick={() => setTab(n.value)}>
-              <span className="nav-item__icon">{n.icon}</span>
-              {n.label}
+    <div className="adm-shell">
+
+      {/* ── Header ── */}
+      <header className="adm-topbar">
+        <div className="adm-topbar__left">
+
+          <div className="adm-brand">
+            <div className="adm-brand__box">MK</div>
+            <div className="adm-brand__info">
+              <span className="adm-brand__title">Painel Admin</span>
+              <span className="adm-brand__sub">MK e BALÃO</span>
+            </div>
+          </div>
+
+          <div className="adm-topbar__sep" />
+
+          <div className="adm-nav-wrap" ref={navRef}>
+            <button className="adm-nav-trigger" onClick={() => setNavOpen(v => !v)}>
+              <span className="adm-nav-trigger__icon">{currentNav.icon}</span>
+              <span>{currentNav.label}</span>
+              <span className="adm-nav-trigger__caret">▾</span>
             </button>
-          ))}
-        </nav>
-        <div className="admin-sidebar__footer">
-          <button className="admin-logout" onClick={logout}>Sair</button>
-        </div>
-      </aside>
 
-      {/* ── Main ── */}
-      <main className="admin-main">
-        <div className="admin-topbar">
-          <div className="admin-topbar__title">{TAB_TITLE[tab]}</div>
-        </div>
-
-        <div className="admin-body">
-
-          {/* ── Agendamentos ── */}
-          {isBookingTab && (
-            <>
-              <div className="kpi-grid">
-                <div className="kpi-card">
-                  <div className="kpi-label">Agendamentos</div>
-                  <div className="kpi-value">{kpi.total}</div>
-                </div>
-                <div className="kpi-card">
-                  <div className="kpi-label">Confirmados</div>
-                  <div className="kpi-value">{kpi.confirmado}</div>
-                </div>
-                <div className="kpi-card">
-                  <div className="kpi-label">Receita</div>
-                  <div className="kpi-value kpi-value--gold">R$ {kpi.receita.toFixed(2).replace('.', ',')}</div>
-                </div>
-              </div>
-
-              <div className="admin-filters">
-                <button className={`filter-chip${filter === 'todos' ? ' active' : ''}`} onClick={() => setFilter('todos')}>Todos</button>
-                {allBarbers.filter(b => b.role !== 'admin').map(b => (
-                  <button key={b.id} className={`filter-chip${filter === b.slug ? ' active' : ''}`}
-                    onClick={() => setFilter(b.slug)}>
-                    {b.name.split(' ')[0]}
+            {navOpen && (
+              <div className="adm-nav-panel">
+                <div className="adm-nav-panel__label">Navegação</div>
+                {NAV_ITEMS.map(item => (
+                  <button
+                    key={item.value}
+                    className={`adm-nav-panel__item${tab === item.value ? ' active' : ''}`}
+                    onClick={() => handleNav(item)}
+                  >
+                    <span className="adm-nav-panel__icon">{item.icon}</span>
+                    <span className="adm-nav-panel__body">
+                      <span className="adm-nav-panel__name">{item.label}</span>
+                      <span className="adm-nav-panel__desc">{item.desc}</span>
+                    </span>
                   </button>
                 ))}
-                <div className="admin-search-wrap">
-                  <input
-                    className="admin-search-input"
-                    type="text" value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    placeholder="Buscar por nome ou telefone…"
-                  />
-                  {search && <button className="admin-search-clear" onClick={() => setSearch('')}>×</button>}
+                <div className="adm-nav-panel__sep" />
+                {NAV_EXTERNAL.map(item => (
+                  <button key={item.path} className="adm-nav-panel__item" onClick={() => handleNav(item)}>
+                    <span className="adm-nav-panel__icon">{item.icon}</span>
+                    <span className="adm-nav-panel__body">
+                      <span className="adm-nav-panel__name">{item.label}</span>
+                      <span className="adm-nav-panel__desc">{item.desc}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="adm-topbar__right">
+          <div className="adm-status-pill">
+            <span className="adm-status-pill__dot" />
+            Barbearia Aberta
+          </div>
+          {installable && (
+            <button className="adm-install-btn" onClick={handleInstall} title="Instalar app na tela inicial">
+              📲 Instalar
+            </button>
+          )}
+          <a href="/" target="_blank" rel="noreferrer" className="adm-site-btn">Ver Site ↗</a>
+          <button className="adm-logout" onClick={logout}>Sair</button>
+        </div>
+      </header>
+
+      {/* ── Main ── */}
+      <main className="adm-main">
+
+        {/* ── Dashboard (hoje / todos) ── */}
+        {isBookingTab && (
+          <div className="adm-dashboard">
+
+            <div className="adm-db-header">
+              <div>
+                <div className="adm-db-eyebrow">Visão Geral</div>
+                <h1 className="adm-db-greeting">{getGreeting(barber?.name)}</h1>
+                {kpi.total > 0 && (
+                  <p className="adm-db-alert">
+                    <span className="adm-db-alert__dot" />
+                    Você tem <strong>{kpi.total}</strong> agendamento{kpi.total !== 1 ? 's' : ''} {tab === 'hoje' ? 'hoje.' : 'nesta página.'}
+                  </p>
+                )}
+              </div>
+              <div className="adm-db-actions">
+                <a href="/" target="_blank" rel="noreferrer" className="adm-btn adm-btn--ghost">↗ Novo Agendamento</a>
+                <button className="adm-btn adm-btn--red" onClick={loadBookings}>↺ Atualizar</button>
+              </div>
+            </div>
+
+            {/* KPI cards */}
+            <div className="adm-kpi-grid adm-kpi-grid--6">
+              <div className="adm-kpi-card">
+                <div className="adm-kpi-card__top">
+                  <div className="adm-kpi-card__icon">📅</div>
+                  <div className="adm-kpi-card__meta">
+                    <span className="adm-kpi-card__label">Agendamentos</span>
+                    <span className={`adm-kpi-card__sub adm-kpi-card__sub--${tab === 'hoje' ? 'green' : 'dim'}`}>{tab === 'hoje' ? 'Hoje' : 'Esta página'}</span>
+                  </div>
+                </div>
+                <div className="adm-kpi-card__val-row">
+                  <span className="adm-kpi-card__val">{kpi.total}</span>
+                  <span className="adm-kpi-card__unit">clientes</span>
                 </div>
               </div>
+              <div className="adm-kpi-card">
+                <div className="adm-kpi-card__top">
+                  <div className="adm-kpi-card__icon adm-kpi-card__icon--green">✓</div>
+                  <div className="adm-kpi-card__meta">
+                    <span className="adm-kpi-card__label">Confirmados</span>
+                    <span className="adm-kpi-card__sub adm-kpi-card__sub--green">Aguardando</span>
+                  </div>
+                </div>
+                <div className="adm-kpi-card__val-row">
+                  <span className="adm-kpi-card__val adm-kpi-card__val--green">{kpi.confirmado}</span>
+                </div>
+              </div>
+              <div className="adm-kpi-card">
+                <div className="adm-kpi-card__top">
+                  <div className="adm-kpi-card__icon adm-kpi-card__icon--green" style={{ fontSize: '0.85rem', fontWeight: 700 }}>R$</div>
+                  <div className="adm-kpi-card__meta">
+                    <span className="adm-kpi-card__label">Receita</span>
+                    <span className={`adm-kpi-card__sub adm-kpi-card__sub--${tab === 'hoje' ? 'green' : 'dim'}`}>{tab === 'hoje' ? 'Estimado hoje' : 'Esta página'}</span>
+                  </div>
+                </div>
+                <div className="adm-kpi-card__val-row">
+                  <span className="adm-kpi-card__val adm-kpi-card__val--gold" style={{ fontSize: '1.75rem' }}>
+                    {kpi.receita.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+                  </span>
+                  <span className="adm-kpi-card__unit">,00</span>
+                </div>
+              </div>
+              <div className="adm-kpi-card">
+                <div className="adm-kpi-card__top">
+                  <div className="adm-kpi-card__icon adm-kpi-card__icon--blue">↗</div>
+                  <div className="adm-kpi-card__meta">
+                    <span className="adm-kpi-card__label">Ticket Médio</span>
+                    <span className="adm-kpi-card__sub adm-kpi-card__sub--dim">por atendimento</span>
+                  </div>
+                </div>
+                <div className="adm-kpi-card__val-row">
+                  <span className="adm-kpi-card__val" style={{ fontSize: '1.75rem' }}>
+                    {kpi.total > 0 ? `R$ ${(kpi.receita / kpi.total).toFixed(0)}` : '—'}
+                  </span>
+                </div>
+              </div>
+              <div className="adm-kpi-card">
+                <div className="adm-kpi-card__top">
+                  <div className="adm-kpi-card__icon">📊</div>
+                  <div className="adm-kpi-card__meta">
+                    <span className="adm-kpi-card__label">Últimos 7 dias</span>
+                    <span className="adm-kpi-card__sub adm-kpi-card__sub--dim">{kpiWeek ? `${kpiWeek.count} atend.` : '…'}</span>
+                  </div>
+                </div>
+                <div className="adm-kpi-card__val-row">
+                  <span className="adm-kpi-card__val adm-kpi-card__val--gold" style={{ fontSize: '1.75rem' }}>
+                    {kpiWeek ? `R$ ${kpiWeek.receita.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}` : '…'}
+                  </span>
+                </div>
+              </div>
+              <div className="adm-kpi-card adm-kpi-card--highlight">
+                <div className="adm-kpi-card__top">
+                  <div className="adm-kpi-card__icon adm-kpi-card__icon--gold" style={{ fontSize: '0.8rem', fontWeight: 800 }}>MÊS</div>
+                  <div className="adm-kpi-card__meta">
+                    <span className="adm-kpi-card__label">Mês atual</span>
+                    <span className="adm-kpi-card__sub adm-kpi-card__sub--dim">{kpiMonth ? `${kpiMonth.count} atend.` : '…'}</span>
+                  </div>
+                </div>
+                <div className="adm-kpi-card__val-row">
+                  <span className="adm-kpi-card__val adm-kpi-card__val--gold" style={{ fontSize: '1.75rem' }}>
+                    {kpiMonth ? `R$ ${kpiMonth.receita.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}` : '…'}
+                  </span>
+                </div>
+              </div>
+            </div>
 
-              {loading ? (
-                <div className="admin-loading">Carregando...</div>
-              ) : filtered.length === 0 ? (
-                <div className="admin-empty">{search ? 'Nenhum resultado para a busca.' : 'Nenhum agendamento encontrado.'}</div>
-              ) : (
+            {/* Filters */}
+            <div className="admin-filters">
+              <button className={`filter-chip${filter === 'todos' ? ' active' : ''}`} onClick={() => setFilter('todos')}>Todos</button>
+              {allBarbers.filter(b => b.role !== 'admin').map(b => (
+                <button key={b.id} className={`filter-chip${filter === b.slug ? ' active' : ''}`} onClick={() => setFilter(b.slug)}>
+                  {b.name.split(' ')[0]}
+                </button>
+              ))}
+              <div className="admin-search-wrap">
+                <input className="admin-search-input" type="text" value={search}
+                  onChange={e => setSearch(e.target.value)} placeholder="Buscar por nome ou telefone…" />
+                {search && <button className="admin-search-clear" onClick={() => setSearch('')}>×</button>}
+              </div>
+            </div>
+
+            {/* Table */}
+            {loading ? (
+              <div className="admin-loading">Carregando...</div>
+            ) : filtered.length === 0 ? (
+              <div className="admin-empty">{search ? 'Nenhum resultado para a busca.' : 'Nenhum agendamento encontrado.'}</div>
+            ) : (
+              <>
                 <div className="admin-table-wrap">
                   <table className="admin-table">
                     <thead>
@@ -874,22 +454,31 @@ export default function Admin({ barber }) {
                           </td>
                           <td>
                             <div>{b.client_name}</div>
-                            <a href={`https://wa.me/55${b.client_phone}`} target="_blank" rel="noreferrer"
-                              className="td-phone">{b.client_phone}</a>
+                            <a href={`https://wa.me/55${b.client_phone}`} target="_blank" rel="noreferrer" className="td-phone">{b.client_phone}</a>
                           </td>
                           <td>{b.barbers?.name}</td>
-                          <td className="td-svc">
-                            {Array.isArray(b.services) ? b.services.map(s => s.name).join(', ') : '—'}
-                          </td>
+                          <td className="td-svc">{Array.isArray(b.services) ? b.services.map(s => s.name).join(', ') : '—'}</td>
                           <td className="td-total">R$ {Number(b.total).toFixed(2).replace('.', ',')}</td>
                           <td><span className={`pill pill--${b.status}`}>{STATUS_LABEL[b.status]}</span></td>
                           <td>
                             <div className="td-actions">
                               {b.status !== 'cancelado' && b.status !== 'concluido' && (
-                                <button className="action-btn-sm" onClick={() => advanceStatus(b.id, b.status)}>Avançar →</button>
+                                <button
+                                  className={`action-btn-sm${actionState[b.id] === 'error' ? ' action-btn-sm--error' : ''}`}
+                                  onClick={() => advanceStatus(b.id, b.status)}
+                                  disabled={actionState[b.id] === 'loading'}
+                                >
+                                  {actionState[b.id] === 'loading' ? '…' : actionState[b.id] === 'error' ? 'Erro' : 'Avançar →'}
+                                </button>
                               )}
                               {b.status !== 'cancelado' && (
-                                <button className="action-btn-sm action-btn-sm--danger" onClick={() => cancelBooking(b.id)}>Cancelar</button>
+                                <button
+                                  className="action-btn-sm action-btn-sm--danger"
+                                  onClick={() => cancelBooking(b.id)}
+                                  disabled={actionState[b.id] === 'loading'}
+                                >
+                                  {actionState[b.id] === 'loading' ? '…' : 'Cancelar'}
+                                </button>
                               )}
                             </div>
                           </td>
@@ -898,18 +487,85 @@ export default function Admin({ barber }) {
                     </tbody>
                   </table>
                 </div>
-              )}
-            </>
-          )}
 
-          {tab === 'analytics' && <AnalyticsPanel />}
-          {tab === 'agenda'    && <AgendaPanel />}
-          {tab === 'servicos'  && <ServicosPanel />}
-          {tab === 'equipe'    && <EquipePanel />}
-          {tab === 'clube'     && <ClubePanel />}
-          {tab === 'config'    && <ConfigPanel />}
+                {/* Pagination — only for "todos" */}
+                {tab === 'todos' && totalPages !== null && totalPages > 1 && (
+                  <div className="admin-pagination">
+                    <button
+                      className="admin-pagination__btn"
+                      onClick={() => setPage(p => Math.max(0, p - 1))}
+                      disabled={page === 0}
+                    >← Anterior</button>
+                    <span className="admin-pagination__info">
+                      Página {page + 1} de {totalPages}
+                      {totalCount !== null && ` · ${totalCount} registros`}
+                    </span>
+                    <button
+                      className="admin-pagination__btn"
+                      onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                      disabled={page >= totalPages - 1}
+                    >Próxima →</button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ── Other panels with section title ── */}
+        {!isBookingTab && (
+          <div className="adm-section-title">{currentNav.label}</div>
+        )}
+
+        <div className={isBookingTab ? '' : 'admin-body'}>
+          {tab === 'analytics'       && <AnalyticsPanel />}
+          {tab === 'agenda'          && <AgendaPanel />}
+          {tab === 'servicos'        && <ServicosPanel />}
+          {tab === 'barber_services' && <BarberServicesPanel />}
+          {tab === 'equipe'          && <EquipePanel />}
+          {tab === 'chat'            && <ChatAgendaPanel />}
+          {tab === 'clube'           && <ClubePanel />}
+          {tab === 'fiado'           && <FiadoPanel barber={barber} isAdmin={true} />}
+          {tab === 'galeria'         && <GaleriaPanel />}
+          {tab === 'config'          && <ConfigPanel />}
         </div>
       </main>
+
+      {/* ── Bottom Nav (mobile) ── */}
+      <nav className="adm-bottom-nav" aria-label="Navegação rápida">
+        {[
+          { icon: '◈',  label: 'Hoje',    value: 'hoje'      },
+          { icon: '📅', label: 'Todos',   value: 'todos'     },
+          { icon: '📊', label: 'Analytics', value: 'analytics' },
+          { icon: '💬', label: 'Chat',    value: 'chat'      },
+          { icon: '⚙',  label: 'Config',  value: 'config'    },
+        ].map(item => (
+          <button
+            key={item.value}
+            className={`adm-bottom-nav__item${tab === item.value ? ' active' : ''}`}
+            onClick={() => setTab(item.value)}
+            aria-label={item.label}
+            aria-current={tab === item.value ? 'page' : undefined}
+          >
+            <span className="adm-bottom-nav__icon" aria-hidden="true">{item.icon}</span>
+            <span className="adm-bottom-nav__label">{item.label}</span>
+          </button>
+        ))}
+        <button
+          className="adm-bottom-nav__item adm-bottom-nav__item--logout"
+          onClick={logout}
+          aria-label="Sair"
+        >
+          <span className="adm-bottom-nav__icon" aria-hidden="true">↩</span>
+          <span className="adm-bottom-nav__label">Sair</span>
+        </button>
+      </nav>
+
+      {/* ── Realtime toast ── */}
+      <div className={`realtime-toast${realtimeMsg ? ' visible' : ''}`} role="status" aria-live="polite">
+        <span className="realtime-toast__dot" aria-hidden="true" />
+        {realtimeMsg}
+      </div>
     </div>
   )
 }

@@ -184,13 +184,30 @@ function BeforeAfter() {
   )
 }
 
+/* ── Static fallback gallery — shown until Supabase responds ── */
+const STATIC_GALLERY = [
+  { id: 'g1', url: '/barbeiro-gabriel.png',       label: 'Fade'   },
+  { id: 'g2', url: '/barbeiro-daniel.png',         label: 'Nevou'  },
+  { id: 'g3', url: '/ambiente-trabalhando.png',    label: 'Barba'  },
+  { id: 'g4', url: '/barbeiro-maikon.png',         label: 'Social' },
+]
+
+/* ── Static fallback — shown until Supabase responds ── */
+const STATIC_BARBERS = [
+  { name: 'MK', slug: 'mk', phone: '5514998989521', avatar_url: '/barbeiro-maikon.png', bio: 'Maikon une a tradição da barbearia com o estilo urbano. Focado em entregar sempre o melhor resultado, com aquele respeito e qualidade impecável.', quote: '"O clássico nunca sai de moda."', speciality: 'Master Barber & Visagista', sort_order: 1 },
+  { name: 'BALÃO', slug: 'daniel', phone: '5514996598304', avatar_url: '/barbeiro-daniel.png', bio: 'Daniel construiu sua reputação com muito trabalho, técnica e um atendimento que faz o cliente se sentir em casa. Especialista em degradê limpo e acabamento na régua.', quote: '"Jesus is enough"', speciality: 'Especialista em Colorimetria', sort_order: 2 },
+  { name: 'GABRIEL', slug: 'gabriel', phone: '5514998918483', avatar_url: '/barbeiro-gabriel.png', bio: 'Gabriel é o talento da nova geração. Com a mão leve e cortes precisos, ele garante um alinhamento perfeito e a sua autoestima no teto.', quote: '"O detalhe separa o bom do excelente."', speciality: 'Barbeiro Profissional', sort_order: 3 },
+]
+
 /* ── Main Component ── */
 export default function Home() {
   const navigate = useNavigate()
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [faqOpen, setFaqOpen] = useState(null)
-  const [plans, setPlans] = useState([])
+  const [plans,   setPlans]   = useState([])
+  const [barbers, setBarbers] = useState(STATIC_BARBERS)
+  const [gallery, setGallery] = useState(STATIC_GALLERY)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50)
@@ -202,6 +219,12 @@ export default function Home() {
     if (!supabase) return
     supabase.from('plans').select('*').eq('active', true).order('sort_order')
       .then(({ data }) => { if (data?.length) setPlans(data) })
+    supabase.from('barbers').select('name,slug,phone,avatar_url,bio,quote,speciality,sort_order')
+      .eq('active', true).neq('role', 'admin').order('sort_order')
+      .then(({ data }) => { if (data?.length) setBarbers(data) })
+    supabase.from('gallery').select('id,url,label,sort_order')
+      .eq('active', true).order('sort_order').order('created_at')
+      .then(({ data }) => { if (data?.length) setGallery(data) })
   }, [])
 
   const scrollTo = (id) => {
@@ -318,14 +341,14 @@ export default function Home() {
           <div className="flex animate-[ticker_20s_linear_infinite] md:animate-none">
             <span className="mx-6">★ 5.0 AVALIAÇÕES</span>
             <span className="mx-6 hidden md:inline">•</span>
-            <span className="mx-6">AMBIENTE CLIMATIZADO</span>
+            <span className="mx-6">MESA DE SINUCA</span>
             <span className="mx-6 hidden md:inline">•</span>
-            <span className="mx-6">ATENDIMENTO PREMIUM</span>
+            <span className="mx-6">DETALHISMO EM CADA CORTE</span>
             <span className="mx-6 hidden md:inline">•</span>
             <span className="mx-6">PIRAJU - SP</span>
             <span className="mx-6 md:hidden">★ 5.0 AVALIAÇÕES</span>
-            <span className="mx-6 md:hidden">AMBIENTE CLIMATIZADO</span>
-            <span className="mx-6 md:hidden">ATENDIMENTO PREMIUM</span>
+            <span className="mx-6 md:hidden">MESA DE SINUCA</span>
+            <span className="mx-6 md:hidden">DETALHISMO EM CADA CORTE</span>
             <span className="mx-6 md:hidden">PIRAJU - SP</span>
           </div>
         </div>
@@ -366,13 +389,13 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row items-center gap-16">
             <div className="w-full lg:w-1/3">
-              <h3 className="font-brush text-5xl md:text-6xl text-chalk mb-4">A Resenha e o Talento</h3>
+              <h3 className="font-brush text-5xl md:text-6xl text-chalk mb-4">Resenha Garantida. Técnica Impecável.</h3>
               <h4 className="font-sans-condensed text-2xl uppercase tracking-widest text-heritage-red mb-8">Nossa Filosofia</h4>
               <p className="font-sans-body text-chalk/80 mb-6 text-lg leading-relaxed">
-                A barbearia não é apenas sobre estética. É o "terceiro lugar" — longe de casa e do trabalho. É onde os homens se reúnem, conversam e mantêm vivos os rituais de cuidado pessoal.
+                A MK e BALÃO é onde a resenha é garantida e a sinuca tá sempre pronta. Aqui você relaxa, conecta e esquece o relógio — enquanto o seu corte vai sendo executado com atenção milimétrica a cada detalhe.
               </p>
               <p className="font-sans-body text-chalk/80 mb-8 text-lg leading-relaxed">
-                Na <strong>MK e BALÃO</strong>, unimos a precisão geométrica dos cortes modernos com o respeito old-school da navalha. Somos artesãos da autoestima masculina.
+                Na <strong>MK e BALÃO</strong>, cada serviço é executado com excelência técnica — do fade ao acabamento na navalha. Não é promessa: é o padrão mínimo de quem senta na nossa cadeira.
               </p>
               <a href="https://www.instagram.com/barbeariamkebalao/" target="_blank" rel="noopener"
                 className="inline-flex items-center gap-2 border-b-2 border-heritage-red pb-1 font-sans-condensed uppercase tracking-widest text-chalk hover:text-heritage-red transition-colors">
@@ -383,21 +406,18 @@ export default function Home() {
 
             <div className="w-full lg:w-2/3">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                {[
-                  { img:'/barbeiro-maikon.png', badge:'Fundador', badgeColor:'bg-heritage-red text-chalk', name:'MK', spec:'Mestre em Fade', sub:'Visagismo e Tesoura', offset:'' },
-                  { img:'/barbeiro-daniel.png',  badge:'Fundador', badgeColor:'bg-heritage-red text-chalk', name:'BALÃO', spec:'Especialista', sub:'Colorimetria & Nevou', offset:'sm:translate-y-8' },
-                  { img:'/barbeiro-gabriel.png', badge:'Barbeiro', badgeColor:'bg-chalk text-midnight font-bold', name:'GABRIEL', spec:'Barba & Clássicos', sub:'Social e Alinhamento', offset:'' },
-                ].map((b, i) => (
-                  <div key={i} className={`border-classic border-chalk p-2 bg-surface transform ${b.offset} hover:-translate-y-2 transition-transform duration-500 group relative`}>
-                    <div className={`absolute -top-3 -right-3 ${b.badgeColor} font-sans-condensed text-[10px] uppercase tracking-widest px-3 py-1 border-classic border-chalk z-10`}>{b.badge}</div>
+                {barbers.map((b, i) => (
+                  <div key={b.slug || i} className={`border-classic border-chalk p-2 bg-surface transform ${i === 1 ? 'sm:translate-y-8' : ''} hover:-translate-y-2 transition-transform duration-500 group relative`}>
+                    <div className={`absolute -top-3 -right-3 ${i < 2 ? 'bg-heritage-red text-chalk' : 'bg-chalk text-midnight font-bold'} font-sans-condensed text-[10px] uppercase tracking-widest px-3 py-1 border-classic border-chalk z-10`}>
+                      {i < 2 ? 'Fundador' : 'Barbeiro'}
+                    </div>
                     <div className="aspect-[3/4] bg-midnight border-classic border-chalk/30 relative overflow-hidden group-hover:border-heritage-red transition-colors">
-                      <img src={b.img} alt={b.name} className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105" />
+                      <img src={b.avatar_url || '/logo-escudo.jpg'} alt={b.name} className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105" onError={e => { e.target.src = '/logo-escudo.jpg' }} />
                       <div className="absolute inset-0 bg-gradient-to-t from-midnight via-midnight/30 to-transparent" />
                       <div className="absolute bottom-0 left-0 right-0 p-4 text-center">
                         <span className="font-brush text-3xl text-chalk block leading-tight drop-shadow-lg">{b.name}</span>
                         <div className="h-px w-10 bg-heritage-red mx-auto my-2" />
-                        <span className="font-sans-condensed uppercase text-xs tracking-widest text-chalk/90 font-bold block">{b.spec}</span>
-                        <span className="font-sans-body text-[10px] text-chalk/60">{b.sub}</span>
+                        <span className="font-sans-condensed uppercase text-xs tracking-widest text-chalk/90 font-bold block">{b.speciality}</span>
                       </div>
                     </div>
                   </div>
@@ -426,7 +446,7 @@ export default function Home() {
             <div>
               <div className="h-[2px] w-16 bg-heritage-red mb-8" />
               <p className="font-sans-body text-chalk/60 text-base leading-relaxed mb-5">
-                A MK e Balão Barbearia nasceu da amizade entre dois barbeiros que acreditavam que uma boa barbearia vai muito além do corte de cabelo. Fundada por <strong className="text-chalk font-semibold">Maikon Dener (MK)</strong> e <strong className="text-chalk font-semibold">Daniel Ferreira (Balão)</strong>, a barbearia cresceu mantendo o mesmo propósito desde o primeiro dia: oferecer um atendimento de confiança, valorizar cada cliente e transformar um simples corte em um momento de conversa, descontração e cuidado.
+                A MK e Balão Barbearia nasceu da amizade entre dois barbeiros que acreditavam que uma boa barbearia vai muito além do corte de cabelo. Fundada por <strong className="text-chalk font-semibold">Maikon Dener (MK)</strong> e <strong className="text-chalk font-semibold">Daniel Ferreira (Balão)</strong>, a barbearia cresceu mantendo o mesmo propósito desde o primeiro dia: oferecer um atendimento impecável, valorizar cada detalhe e transformar cada atendimento em um momento de conversa, descontração e cuidado de verdade.
               </p>
               <p className="font-sans-body text-chalk/60 text-base leading-relaxed">
                 Hoje, ao lado de <strong className="text-chalk font-semibold">Gabriel Oliveira</strong>, formamos uma equipe comprometida com a evolução constante — acompanhando tendências e aperfeiçoando técnicas sem perder aquilo que sempre fez parte da nossa essência: o <strong className="text-chalk font-semibold">respeito por quem senta na cadeira</strong>.
@@ -435,27 +455,30 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { img:'/barbeiro-daniel.png', alt:'Daniel Ferreira', role:'Fundador da Barbearia', roleColor:'text-heritage-red', name:'Daniel Balão', sub:'Balão do Corte', bio:'Daniel construiu sua reputação com muito trabalho, técnica e um atendimento que faz o cliente se sentir em casa. Especialista em degradê limpo e acabamento na régua.', quote:'"Jesus is enough"', wa:'https://wa.me/5514996598304?text=Olá%20Daniel!%20Quero%20agendar%20um%20horário%20com%20você%20na%20MK%20e%20Balão.', waLabel:'Agendar com Daniel' },
-              { img:'/barbeiro-maikon.png', alt:'Maikon Dener',    role:'Fundador da Barbearia', roleColor:'text-heritage-red', name:'Maikon MK',    sub:'Master Barber & Visagista', bio:'Maikon une a tradição da barbearia com o estilo urbano. Focado em entregar sempre o melhor resultado, com aquele respeito e qualidade impecável.', quote:'"O clássico nunca sai de moda."', wa:'https://wa.me/5514998989521?text=Olá%20Maikon!%20Quero%20agendar%20um%20horário%20com%20você%20na%20MK%20e%20Balão.', waLabel:'Agendar com Maikon' },
-              { img:'/barbeiro-gabriel.png',alt:'Gabriel Oliveira', role:'Barbeiro',              roleColor:'text-chalk/40',     name:'Gabriel',        sub:'Barbeiro Profissional',     bio:'Gabriel é o talento da nova geração. Com a mão leve e cortes precisos, ele garante um alinhamento perfeito e a sua autoestima no teto.', quote:'"O detalhe separa o bom do excelente."', wa:'https://wa.me/5514998918483?text=Olá%20Gabriel!%20Quero%20agendar%20um%20horário%20com%20você%20na%20MK%20e%20Balão.', waLabel:'Agendar com Gabriel' },
-            ].map((b, i) => (
-              <div key={i} className="border-classic border-chalk/20 bg-midnight p-7 hover:border-heritage-red hover:-translate-y-2 hover:shadow-[0_24px_48px_rgba(0,0,0,0.5)] transition-all duration-300 text-center group flex flex-col">
+            {barbers.map((b, i) => (
+              <div key={b.slug || i} className="border-classic border-chalk/20 bg-midnight p-7 hover:border-heritage-red hover:-translate-y-2 hover:shadow-[0_24px_48px_rgba(0,0,0,0.5)] transition-all duration-300 text-center group flex flex-col">
                 <div className="relative w-32 h-32 rounded-full border-classic border-chalk/20 mx-auto mb-5 overflow-hidden group-hover:border-heritage-red transition-colors duration-300 shrink-0">
-                  <img src={b.img} alt={b.alt} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
+                  <img src={b.avatar_url || '/logo-escudo.jpg'} alt={b.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" onError={e => { e.target.src = '/logo-escudo.jpg' }} />
                   <div className="absolute inset-0 bg-gradient-to-t from-heritage-red/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
                 </div>
-                <p className={`font-sans-condensed text-[10px] uppercase tracking-widest font-bold mb-1 ${b.roleColor}`}>{b.role}</p>
+                <p className={`font-sans-condensed text-[10px] uppercase tracking-widest font-bold mb-1 ${i < 2 ? 'text-heritage-red' : 'text-chalk/40'}`}>
+                  {i < 2 ? 'Fundador da Barbearia' : 'Barbeiro'}
+                </p>
                 <h4 className="font-brush text-3xl text-chalk mb-0.5">{b.name}</h4>
-                <p className="font-sans-condensed text-xs uppercase tracking-widest text-chalk/40 mb-4">{b.sub}</p>
+                <p className="font-sans-condensed text-xs uppercase tracking-widest text-chalk/40 mb-4">{b.speciality}</p>
                 <p className="font-sans-body text-chalk/60 text-sm leading-relaxed mb-5 flex-1">{b.bio}</p>
-                <blockquote className="border-l-2 border-heritage-red pl-3 text-left mb-5">
-                  <p className="font-sans-body text-chalk/40 text-xs italic">{b.quote}</p>
-                </blockquote>
-                <a href={b.wa} target="_blank" rel="noopener"
-                  className="inline-flex items-center justify-center border-classic border-chalk bg-transparent text-chalk font-sans-condensed uppercase tracking-[0.15em] py-2.5 text-xs w-full group-hover:bg-heritage-red group-hover:border-heritage-red group-hover:text-chalk transition-all duration-300">
-                  {b.waLabel}
-                </a>
+                {b.quote && (
+                  <blockquote className="border-l-2 border-heritage-red pl-3 text-left mb-5">
+                    <p className="font-sans-body text-chalk/40 text-xs italic">{b.quote}</p>
+                  </blockquote>
+                )}
+                {b.phone && (
+                  <a href={`https://wa.me/${b.phone}?text=Olá%20${encodeURIComponent(b.name.split(' ')[0])}!%20Quero%20agendar%20um%20horário%20com%20você%20na%20MK%20e%20Balão.`}
+                    target="_blank" rel="noopener"
+                    className="inline-flex items-center justify-center border-classic border-chalk bg-transparent text-chalk font-sans-condensed uppercase tracking-[0.15em] py-2.5 text-xs w-full group-hover:bg-heritage-red group-hover:border-heritage-red group-hover:text-chalk transition-all duration-300">
+                    Agendar com {b.name.split(' ')[0]}
+                  </a>
+                )}
               </div>
             ))}
           </div>
@@ -472,7 +495,7 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { init:'M', name:'Marcos V.',  since:'Cliente há 2 anos',   text:'"Melhor degradê de Piraju sem dúvidas. Ambiente top, a resenha é sempre garantida e o Balão acertou em cheio no meu platinado. Sou cliente fixo."' },
+              { init:'M', name:'Marcos V.',  since:'Cliente há 2 anos',   text:'"Melhor degradê de Piraju sem dúvidas. A resenha é sempre garantida, a sinuca sempre pronta e o Balão acertou em cheio no meu platinado. Sou cliente fixo."' },
               { init:'T', name:'Thiago S.',  since:'Avaliação do Google', text:'"Corto com o MK faz tempo e a evolução deles é absurda. Gabriel entrou pro time e manteve o mesmo padrão alto. Não troco por nenhuma outra."' },
               { init:'F', name:'Felipe C.',  since:'Cliente Novo',         text:'"Fiz a barba com toalha quente e foi uma experiência foda. O corte na tesoura do MK tem muita técnica. Estrutura impecável no centro da cidade."' },
             ].map((r, i) => (
@@ -506,15 +529,10 @@ export default function Home() {
               @barbeariamkebalao
             </a>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { img:'/barbeiro-gabriel.png', label:'Fade'   },
-              { img:'/barbeiro-daniel.png',  label:'Nevou'  },
-              { img:'/ambiente-trabalhando.png', label:'Barba'  },
-              { img:'/barbeiro-maikon.png',  label:'Social' },
-            ].map((g, i) => (
-              <div key={i} className="aspect-square border-classic border-chalk/30 group relative overflow-hidden">
-                <img src={g.img} alt={g.label} className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110" />
+          <div className={`grid gap-4 ${gallery.length <= 3 ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-4'}`}>
+            {gallery.map((g) => (
+              <div key={g.id} className="aspect-square border-classic border-chalk/30 group relative overflow-hidden">
+                <img src={g.url} alt={g.label} className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-midnight/80 to-transparent opacity-60 group-hover:opacity-90 transition-opacity" />
                 <div className="absolute inset-0 flex flex-col items-center justify-end p-4 text-center">
                   <span className="font-sans-condensed uppercase tracking-widest text-sm text-chalk font-bold drop-shadow-lg">{g.label}</span>
@@ -742,7 +760,7 @@ export default function Home() {
             </a>
           </div>
           <div className="border-t-classic border-chalk/10 pt-8 flex flex-col md:flex-row justify-between items-center text-xs font-sans-condensed uppercase tracking-widest text-chalk/40">
-            <p>© 2024 MK e BALÃO Barbearia. Todos os direitos reservados.</p>
+            <p>© {new Date().getFullYear()} MK e BALÃO Barbearia. Todos os direitos reservados.</p>
             <a href="https://fluencyworks.com.br" target="_blank" rel="noopener"
               className="mt-2 md:mt-0 hover:text-chalk/70 transition-colors">
               Criado pela Fluency Works

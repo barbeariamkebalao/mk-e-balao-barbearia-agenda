@@ -1,0 +1,15 @@
+-- ============================================================
+-- OBSOLETO — migration-booking-rls.sql
+-- Substituído por: schema.sql v4.0
+-- ============================================================
+--
+-- Este arquivo adicionava leitura pública de bookings.
+-- O schema.sql v4.0 já inclui essa policy:
+--
+--   CREATE POLICY "bookings_select" ON bookings
+--     FOR SELECT USING (true);
+--
+-- Para banco existente, use docs/migration-rls-v4.sql
+-- que reaplica todas as policies corretamente.
+--
+-- Não execute este arquivo.

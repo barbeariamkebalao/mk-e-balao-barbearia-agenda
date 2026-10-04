@@ -1,0 +1,15 @@
+-- ============================================================
+-- OBSOLETO — migration-security.sql
+-- Substituído por: schema.sql v4.0 + docs/migration-rls-v4.sql
+-- ============================================================
+--
+-- Este arquivo tentava corrigir policies recursivas e adicionar
+-- credentials_json, mas continha:
+--   1. Policies com auto-referência em barbers (risco de recursão)
+--   2. Senhas reais em plaintext no SQL
+--
+-- Para banco novo:       execute schema.sql v4.0
+-- Para banco existente:  execute docs/migration-rls-v4.sql
+-- Para credenciais:      use Admin → Config → Acesso Digital
+--
+-- Não execute este arquivo.

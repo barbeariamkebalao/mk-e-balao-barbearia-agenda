@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 import { formatDateLabel } from '../lib/slots'
 
 export default function Confirm() {
@@ -6,19 +8,65 @@ export default function Confirm() {
   const navigate  = useNavigate()
   const booking   = state?.booking
   const barber    = state?.barber
+  const waUrl     = state?.waUrl  // built by Booking.jsx with full message + cancel link
+
+  // Guard: acesso direto à URL sem state (refresh, link direto)
+  if (!booking) {
+    return (
+      <div className="confirm-page">
+        <div className="confirm-box">
+          <div className="confirm-icon">✂️</div>
+          <h1 className="confirm-title">Nenhum agendamento encontrado</h1>
+          <p style={{ color: 'var(--dim)', fontSize: '0.9rem', textAlign: 'center' }}>
+            Para ver um agendamento você precisa acessar este link logo após confirmar.
+          </p>
+          <div className="confirm-actions">
+            <button className="btn-outline" onClick={() => navigate('/')}>Fazer novo agendamento</button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const [rescheduling,    setRescheduling]    = useState(false)
+  const [rescheduleError, setRescheduleError] = useState(false)
+  const [copied,          setCopied]          = useState(false)
 
   const cancelUrl = booking
     ? `${window.location.origin}/cancelar/${booking.cancel_token}`
     : null
 
-  const waMsg = booking
-    ? encodeURIComponent(
-        `Olá! Meu agendamento foi confirmado:\n` +
-        `📅 ${formatDateLabel(booking.date)} às ${booking.time.slice(0,5)}\n` +
-        `✂️ ${barber?.name}\n` +
-        `👤 ${booking.client_name}`
-      )
-    : ''
+  function copyCancel() {
+    if (!cancelUrl) return
+    navigator.clipboard?.writeText(cancelUrl).catch(() => {})
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  async function handleReschedule() {
+    if (!booking || !supabase) return
+    setRescheduling(true)
+    setRescheduleError(false)
+    const { error } = await supabase
+      .from('bookings')
+      .update({ status: 'cancelado' })
+      .eq('id', booking.id)
+    if (error) {
+      setRescheduling(false)
+      setRescheduleError(true)
+      setTimeout(() => setRescheduleError(false), 4000)
+      return
+    }
+    navigate('/agendar', {
+      state: {
+        prefill: {
+          name:  booking.client_name,
+          phone: booking.client_phone,
+          barber,
+        },
+      },
+    })
+  }
 
   return (
     <div className="confirm-page">
@@ -39,23 +87,37 @@ export default function Confirm() {
           Guarde o link abaixo para cancelar se precisar:
         </p>
         {cancelUrl && (
-          <div className="confirm-cancel-url">{cancelUrl}</div>
+          <div className="confirm-cancel-url-wrap">
+            <div className="confirm-cancel-url">{cancelUrl}</div>
+            <button className="confirm-copy-btn" onClick={copyCancel}>
+              {copied ? '✓ Copiado' : '⎘ Copiar'}
+            </button>
+          </div>
         )}
 
         <div className="confirm-actions">
-          {barber?.phone && (
+          {waUrl && (
             <a
               className="btn-wa"
-              href={`https://wa.me/${barber.phone}?text=${waMsg}`}
+              href={waUrl}
               target="_blank"
               rel="noreferrer"
             >
-              Confirmar no WhatsApp
+              Avisar o barbeiro no WhatsApp
             </a>
           )}
           <button className="btn-outline" onClick={() => navigate('/')}>
             Novo agendamento
           </button>
+          {booking && (
+            <button
+              className="btn-ghost"
+              onClick={handleReschedule}
+              disabled={rescheduling}
+            >
+              {rescheduling ? 'Processando...' : rescheduleError ? 'Erro — tentar de novo' : 'Reagendar'}
+            </button>
+          )}
         </div>
       </div>
     </div>

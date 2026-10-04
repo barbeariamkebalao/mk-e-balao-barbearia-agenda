@@ -15,9 +15,9 @@ export function minutesToTime(m) {
   return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`
 }
 
-// Formata data Date → "YYYY-MM-DD"
+// Retorna "YYYY-MM-DD" no timezone de Brasília (UTC-3) — evita bug de virada de dia UTC
 export function formatDate(d) {
-  return d.toISOString().split('T')[0]
+  return d.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' })
 }
 
 // Formata data para exibição: "Seg, 15 Out"
@@ -27,17 +27,16 @@ export function formatDateLabel(dateStr) {
   return `${day}, ${d.getDate()} ${d.toLocaleString('pt-BR', { month: 'short' }).replace('.', '')}`
 }
 
-// Retorna os próximos N dias úteis (sem domingo) a partir de amanhã
-export function getNextDays(n = 7) {
+// Retorna os próximos N dias úteis (sem domingo) a partir de hoje (Brasília)
+export function getNextDays(n = 20) {
   const days = []
   const today = new Date()
   let cursor = new Date(today)
-  cursor.setDate(cursor.getDate() + 1)
 
   while (days.length < n) {
-    if (cursor.getDay() !== 0) { // pula domingo
-      days.push(formatDate(cursor))
-    }
+    const dateStr = formatDate(cursor)
+    const dow = new Date(dateStr + 'T12:00:00').getDay()
+    if (dow !== 0) days.push(dateStr)
     cursor.setDate(cursor.getDate() + 1)
   }
   return days
@@ -68,11 +67,13 @@ export function calcSlots(barber, avail, bookings, serviceMinutes, date) {
       to:   timeToMinutes(b.time.slice(0, 5)) + b.total_minutes,
     }))
 
-  // Bloqueia slots passados se for hoje
+  // Bloqueia slots passados se for hoje — hora local de Brasília
   const now = new Date()
   const todayStr = formatDate(now)
+  const brHour = parseInt(now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: 'numeric', hour12: false }), 10)
+  const brMin  = now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', minute: 'numeric' })
   const nowMinutes = date === todayStr
-    ? now.getHours() * 60 + now.getMinutes() + 30 // 30 min de antecedência
+    ? brHour * 60 + parseInt(brMin, 10) + 30
     : 0
 
   const slots = []
