@@ -63,12 +63,12 @@ export default function Manual({ role = null }) {
 
   useEffect(() => {
     async function load() {
-      const [{ data: b }, { data: s }] = await Promise.all([
-        supabase.from('barbers').select('name, slug, speciality, role, interval_minutes').neq('role', 'admin').order('sort_order'),
-        supabase.from('settings').select('*').eq('id', 1).single(),
-      ])
+      const { data: b } = await supabase.from('barbers').select('name, slug, speciality, role, interval_minutes').neq('role', 'admin').order('sort_order')
       setBarbers(b || [])
-      setSettings(s || {})
+      try {
+        const { data: s } = await supabase.from('settings').select('*').eq('id', 1).maybeSingle()
+        setSettings(s || {})
+      } catch {}
     }
     load()
   }, [])
