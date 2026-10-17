@@ -223,7 +223,7 @@ export default function Home() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Reveal ao scroll para seções abaixo do hero
+  // Reveal ao scroll — re-observa quando barbers carrega do Supabase
   useEffect(() => {
     const els = document.querySelectorAll('.reveal')
     if (!els.length) return
@@ -233,7 +233,7 @@ export default function Home() {
     )
     els.forEach(el => io.observe(el))
     return () => io.disconnect()
-  }, [])
+  }, [barbers])
 
   useEffect(() => {
     if (!supabase) return
