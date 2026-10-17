@@ -20,7 +20,12 @@ export default function Cancel() {
         .single()
 
       if (!data) { setState('notfound'); return }
-      if (data.status === 'cancelado') { setState('done'); return }
+      if (['cancelado', 'concluido'].includes(data.status)) { setState('done'); return }
+
+      // Block cancellation more than 24h after the appointment
+      const apptDate = new Date(`${data.date}T${data.time}`)
+      const cutoff   = new Date(apptDate.getTime() + 24 * 60 * 60 * 1000)
+      if (new Date() > cutoff) { setState('notfound'); return }
 
       setBooking(data)
       setBarber(data.barbers)
@@ -36,13 +41,26 @@ export default function Cancel() {
       .update({ status: 'cancelado' })
       .eq('cancel_token', token)
 
-    setState(error ? 'error' : 'done')
+    if (error) { setState('error'); return }
+    setState('done')
+    // S1 — notifica barbeiro automaticamente via WA
+    if (barber?.phone) {
+      const msg = encodeURIComponent(
+        `Olá! Um cliente cancelou o agendamento. O horário foi liberado.`
+      )
+      window.open(`https://wa.me/${barber.phone}?text=${msg}`, '_blank')
+    }
   }
 
   return (
     <div className="confirm-page">
       <div className="confirm-box">
-        {state === 'loading' && <p>Carregando...</p>}
+        {state === 'loading' && (
+          <>
+            <div className="admin-loading__spinner" style={{ width: 28, height: 28, borderWidth: 3 }} aria-hidden="true" />
+            <p style={{ color: 'var(--dim)', fontSize: '0.875rem' }}>Carregando...</p>
+          </>
+        )}
 
         {state === 'notfound' && (
           <>
@@ -74,7 +92,18 @@ export default function Cancel() {
             <div className="confirm-icon">✓</div>
             <h1 className="confirm-title">Cancelado</h1>
             <p>Seu agendamento foi cancelado e o horário foi liberado.</p>
-            <button className="btn-outline" onClick={() => navigate('/')}>Fazer novo agendamento</button>
+            <div className="confirm-actions">
+              {barber?.phone && (
+                <a
+                  className="btn-wa"
+                  href={`https://wa.me/${barber.phone}?text=${encodeURIComponent('Olá! Precisei cancelar meu agendamento. Fico no aguardo para reagendar.')}`}
+                  target="_blank" rel="noreferrer"
+                >
+                  Avisar barbeiro no WhatsApp
+                </a>
+              )}
+              <button className="btn-outline" onClick={() => navigate('/')}>Fazer novo agendamento</button>
+            </div>
           </>
         )}
 
@@ -83,6 +112,10 @@ export default function Cancel() {
             <div className="confirm-icon">❌</div>
             <h1 className="confirm-title">Erro ao cancelar</h1>
             <p>Tente novamente ou entre em contato com a barbearia.</p>
+            <div className="confirm-actions">
+              <button className="btn-danger" onClick={doCancel}>Tentar novamente</button>
+              <button className="btn-outline" onClick={() => navigate('/')}>Voltar ao início</button>
+            </div>
           </>
         )}
       </div>

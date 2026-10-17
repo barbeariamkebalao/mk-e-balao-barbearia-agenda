@@ -25,12 +25,13 @@ export default function AgendaPanel() {
   }
 
   function updateSlot(barberId, day, field, value) {
+    const defaultEnd = day === 6 ? '20:00' : '19:00'
     setAvail(prev => ({
       ...prev,
       [barberId]: {
         ...(prev[barberId] || {}),
         [day]: {
-          start_time: '09:00', end_time: '19:00', active: false,
+          start_time: '09:00', end_time: defaultEnd, active: false,
           ...(prev[barberId]?.[day] || {}),
           barber_id: barberId, day_of_week: day, [field]: value,
         },
@@ -66,6 +67,22 @@ export default function AgendaPanel() {
   return (
     <div className="mgmt-panel">
       {msg && <div className="mgmt-toast">{msg}</div>}
+
+      {/* Regras fixas de operação */}
+      <div className="mgmt-group">
+        <div className="mgmt-group__title">Regras de Operação</div>
+        <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.82rem', color: 'var(--dim)' }}>
+            <span style={{ color: 'var(--gold)', fontWeight: 700, fontFamily: 'var(--font-heading)', letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: '0.65rem' }}>Almoço</span>
+            <span>12:00 – 13:00 · Bloqueado automaticamente para todos os barbeiros todos os dias</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.82rem', color: 'var(--dim)' }}>
+            <span style={{ color: 'var(--gold)', fontWeight: 700, fontFamily: 'var(--font-heading)', letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: '0.65rem' }}>Padrão</span>
+            <span>Seg–Sex: 09:00 – 19:00 · Sábado: 09:00 – 20:00 · Domingo: fechado</span>
+          </div>
+        </div>
+      </div>
+
       {barbers.map(b => {
         const bAvail = avail[b.id] || {}
         return (
@@ -73,7 +90,8 @@ export default function AgendaPanel() {
             <div className="mgmt-group__title">{b.name}</div>
             <div className="avail-grid">
               {[0, 1, 2, 3, 4, 5, 6].map(day => {
-                const slot = bAvail[day] || { start_time: '09:00', end_time: '19:00', active: false }
+                const defaultEnd = day === 6 ? '20:00' : '19:00'
+                const slot = bAvail[day] || { start_time: '09:00', end_time: defaultEnd, active: false }
                 return (
                   <div key={day} className={`avail-day${slot.active ? ' avail-day--open' : ''}`}>
                     <div className="avail-day__label">{DAYS_PT[day]}</div>

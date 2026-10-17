@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { calcSlots, getNextDays, formatDate, formatDateLabel } from '../lib/slots'
 
-const DELAY = { short: 400, mid: 700, long: 1000 }
+const DELAY = { short: 220, mid: 380, long: 520 }
 
 const BOT_MESSAGES = {
   classico: {
@@ -167,6 +167,7 @@ export default function Booking({ preselectedSlug = null }) {
   const [exhaustedDates, setExhaustedDates] = useState([])
   const [allBlockedRows, setAllBlockedRows] = useState([]) // { date, barber_id }
   const [botPersonality, setBotPersonality] = useState('classico')
+  const [upcomingBooking, setUpcomingBooking] = useState(null) // agendamento futuro do cliente recorrente
 
   const msgs = BOT_MESSAGES[botPersonality] || BOT_MESSAGES.classico
 
@@ -184,7 +185,7 @@ export default function Booking({ preselectedSlug = null }) {
   const addonServices = visibleServices.filter(s => s.is_addon)
 
   // name é sempre o primeiro passo real (ou 'returning' se há cliente salvo)
-  const NO_BACK = ['welcome', 'success', 'name', 'returning']
+  const NO_BACK = ['welcome', 'success', 'name', 'returning', 'mybooking']
 
   function goBack() {
     const actions = {
@@ -240,7 +241,7 @@ export default function Booking({ preselectedSlug = null }) {
           supabase.from('barber_services').select('barber_id, service_id'),
           // Só datas futuras — evita carregar histórico de bloqueios antigos
           supabase.from('blocked_dates').select('date, barber_id').gte('date', today),
-          supabase.from('settings').select('bot_config').eq('id', 1).single(),
+          supabase.from('settings').select('bot_config').eq('id', 1).maybeSingle(),
         ])
         setBarbers(b || [])
         setServices(s || [])
@@ -253,6 +254,23 @@ export default function Booking({ preselectedSlug = null }) {
         setBarberServicesMap(map)
         setAllBlockedRows(bd || [])
         if (st?.bot_config?.personality) setBotPersonality(st.bot_config.personality)
+
+        // Busca agendamento futuro do cliente recorrente (localStorage)
+        try {
+          const saved = JSON.parse(localStorage.getItem('mk_client') || 'null')
+          if (saved?.phone) {
+            const { data: bkData } = await supabase
+              .from('bookings')
+              .select('*')
+              .eq('client_phone', saved.phone)
+              .gte('date', today)
+              .eq('status', 'confirmado')
+              .order('date', { ascending: true })
+              .order('time', { ascending: true })
+              .limit(1)
+            if (bkData?.length) setUpcomingBooking(bkData[0])
+          }
+        } catch {}
       } catch {
         setLoadError(true)
       }
@@ -267,17 +285,8 @@ export default function Booking({ preselectedSlug = null }) {
     startChat()
   }, [barbers, services])
 
-  async function startChat() {
-    // Reagendamento com prefill — fluxo antigo preservado
-    if (prefill) {
-      const { name, phone, barber: b } = prefill
-      setDraft(d => ({ ...d, name, phone, ...(b ? { barber: b } : {}) }))
-      await botSay(`Bem-vindo de volta, ${name.split(' ')[0]}! ✂️`, DELAY.short)
-      await botSay('Vamos escolher um novo horário. O que você quer fazer?', DELAY.mid)
-      setStep(b ? 'category' : 'barber')
-      return
-    }
-
+  // Fluxo normal de saudação — reutilizado pelo startChat e pelo "Agendar novo"
+  async function startNormalFlow() {
     if (preselectedSlug && barbers.length === 1) {
       const b = barbers[0]
       setDraft(d => ({ ...d, barber: b }))
@@ -304,6 +313,36 @@ export default function Booking({ preselectedSlug = null }) {
     }
   }
 
+  async function startChat() {
+    // Reagendamento com prefill — fluxo antigo preservado
+    if (prefill) {
+      const { name, phone, barber: b } = prefill
+      setDraft(d => ({ ...d, name, phone, ...(b ? { barber: b } : {}) }))
+      await botSay(`Bem-vindo de volta, ${name.split(' ')[0]}! ✂️`, DELAY.short)
+      await botSay('Vamos escolher um novo horário. O que você quer fazer?', DELAY.mid)
+      setStep(b ? 'category' : 'barber')
+      return
+    }
+
+    // Agendamento futuro do cliente recorrente — mostra antes do fluxo normal
+    if (upcomingBooking) {
+      const barberName = barbers.find(b => b.id === upcomingBooking.barber_id)?.name || 'seu barbeiro'
+      const svcList = (upcomingBooking.services || []).map(s => s.name).join(' + ')
+      await botSay(msgs.welcome, DELAY.short)
+      await botSay(
+        `${savedClient ? savedClient.name.split(' ')[0] + ', você' : 'Você'} já tem um agendamento confirmado:\n\n` +
+        `📅 ${formatDateLabel(upcomingBooking.date)} às ${upcomingBooking.time}\n` +
+        `✂️ ${barberName}\n` +
+        `💈 ${svcList}`,
+        DELAY.mid
+      )
+      setStep('mybooking')
+      return
+    }
+
+    await startNormalFlow()
+  }
+
   async function chooseReturning(isReturning) {
     if (isReturning) {
       userSay('Sim, sou eu ✓')
@@ -327,14 +366,25 @@ export default function Booking({ preselectedSlug = null }) {
 
   async function chooseBarber(barber) {
     userSay(barber.name)
+    const newDraft = { ...draft, barber }
     setDraft(d => ({ ...d, barber }))
     if (barber.id === '__primeiro__') {
       await botSay(msgs.primeiroDisp)
     } else {
       await botSay(msgs.barberChosen(barber.name.split(' ')[0]))
     }
-    await botSay(msgs.askCategory, DELAY.short)
-    setStep('category')
+    // Auto-skip category when only one is available
+    const bsIds = barberServicesMap[barber.id] || null
+    const vis = bsIds ? services.filter(s => bsIds.includes(s.id)) : services
+    const cats = [...new Set(vis.filter(s => !s.is_addon).map(s => s.category))]
+    if (cats.length === 1) {
+      setDraft(d => ({ ...d, barber, category: cats[0] }))
+      await botSay(msgs.askService, DELAY.short)
+      setStep('service')
+    } else {
+      await botSay(msgs.askCategory, DELAY.short)
+      setStep('category')
+    }
     setInput('')
   }
 
@@ -546,7 +596,7 @@ export default function Booking({ preselectedSlug = null }) {
       client_name: d.name, client_phone: d.phone,
       barber_id: d.barber.id, services: [...(d.service ? [d.service] : []), ...d.addons],
       date: d.date, time: d.time,
-      total_minutes: totalMin, total, status: 'pendente',
+      total_minutes: totalMin, total, status: 'confirmado',
       cancel_token: cancelToken,
     })
 
@@ -567,7 +617,7 @@ export default function Booking({ preselectedSlug = null }) {
       barber_id: d.barber.id,
       services: [...(d.service ? [d.service] : []), ...d.addons],
       date: d.date, time: d.time,
-      total_minutes: totalMin, total, status: 'pendente',
+      total_minutes: totalMin, total, status: 'confirmado',
       cancel_token: cancelToken,
     }
 
@@ -800,6 +850,23 @@ export default function Booking({ preselectedSlug = null }) {
             </div>
           )}
 
+          {/* Meu agendamento (cliente recorrente com booking futuro) */}
+          {step === 'mybooking' && upcomingBooking && (
+            <div className="action-list">
+              <button className="chat-action-btn" onClick={async () => {
+                setUpcomingBooking(null)
+                userSay('Agendar novo horário')
+                await startNormalFlow()
+              }}>
+                Agendar novo horário ✂️
+              </button>
+              <button className="chat-action-btn" style={{ borderColor: 'rgba(211,43,47,0.45)', color: 'var(--red)' }}
+                onClick={() => navigate(`/cancelar/${upcomingBooking.cancel_token}`)}>
+                Cancelar este agendamento
+              </button>
+            </div>
+          )}
+
           {/* Adicionais */}
           {step === 'addons' && (
             <>
@@ -821,8 +888,20 @@ export default function Booking({ preselectedSlug = null }) {
                   )
                 })}
               </div>
+              {draft.addons.length > 0 && (
+                <div className="addon-total-preview">
+                  <span className="addon-total-preview__label">Total estimado:</span>
+                  <span className="addon-total-preview__value">
+                    R$ {((draft.service?.price || 0) + draft.addons.reduce((s, a) => s + (Number(a.price) || 0), 0)).toFixed(2).replace('.', ',')}
+                  </span>
+                </div>
+              )}
               <div style={{ marginTop: '0.5rem' }}>
-                <button className="chat-action-btn primary" onClick={confirmAddons}>Continuar sem adicional →</button>
+                <button className="chat-action-btn primary" onClick={confirmAddons}>
+                  {draft.addons.length > 0
+                    ? `Confirmar adicionais (${draft.addons.length}) ✓`
+                    : 'Sem adicionais →'}
+                </button>
               </div>
             </>
           )}

@@ -101,7 +101,7 @@ export default function EquipePanel() {
     // Auto-cria disponibilidade Seg–Sáb 09:00–19:00
     const availRows = [1, 2, 3, 4, 5, 6].map(day => ({
       barber_id: newBarber.id, day_of_week: day,
-      start_time: '09:00', end_time: '19:00', active: true,
+      start_time: '09:00', end_time: day === 6 ? '20:00' : '19:00', active: true,
     }))
     await supabase.from('availability').insert(availRows)
 

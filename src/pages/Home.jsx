@@ -85,6 +85,14 @@ const FAQ_ITEMS = [
     q: 'Vocês cortam cabelo infantil?',
     a: 'Sim! Temos paciência e técnica para atender as crianças, garantindo um corte estiloso no mesmo padrão MK e Balão.',
   },
+  {
+    q: 'Como funciona o agendamento online?',
+    a: 'É simples: clique em "Agendar Agora", escolha o barbeiro, selecione o serviço e o horário disponível. O agendamento é confirmado na hora, sem precisar ligar nem esperar aprovação. Você ainda recebe o link para cancelar se precisar.',
+  },
+  {
+    q: 'Posso cancelar ou remarcar meu horário?',
+    a: 'Sim. Na confirmação do agendamento você recebe um link único de cancelamento. Utilizamos prazo de até 24h antes do horário para cancelar sem custo. Para remarcar, basta cancelar e agendar novamente.',
+  },
 ]
 
 /* ── Before & After Slider ── */
@@ -215,6 +223,18 @@ export default function Home() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  // Reveal ao scroll para seções abaixo do hero
+  useEffect(() => {
+    const els = document.querySelectorAll('.reveal')
+    if (!els.length) return
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') }),
+      { threshold: 0.12 }
+    )
+    els.forEach(el => io.observe(el))
+    return () => io.disconnect()
+  }, [])
+
   useEffect(() => {
     if (!supabase) return
     supabase.from('plans').select('*').eq('active', true).order('sort_order')
@@ -246,7 +266,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <div className="flex-shrink-0 flex items-center cursor-pointer" onClick={() => window.scrollTo(0, 0)}>
-              <img src="/logo-semfundo.png" alt="MK e BALÃO Barbearia" className="h-12 w-auto object-contain" />
+              <img src="/logo-semfundo.png" alt="MK e BALÃO Barbearia" className="h-12 w-auto object-contain nav-logo-pulse" />
             </div>
 
             <div className="hidden md:flex items-center space-x-8 font-sans-condensed tracking-widest uppercase text-sm">
@@ -282,7 +302,7 @@ export default function Home() {
                 <button key={id} onClick={() => scrollTo(id)} className="block w-full text-chalk">{label}</button>
               ))}
               <button onClick={goBook} className="w-full mt-4 border-classic border-chalk bg-heritage-red text-chalk px-6 py-3 font-bold">Agendar Horário</button>
-              <button onClick={() => navigate('/login')} className="w-full border border-chalk/15 text-chalk/35 py-2 text-[10px] uppercase tracking-[0.3em] hover:text-chalk/60 transition-colors mt-2">Portal Interno</button>
+              <button onClick={() => navigate('/login')} className="w-full border border-chalk/25 text-chalk/55 py-2 text-[10px] uppercase tracking-[0.3em] hover:text-chalk hover:border-chalk/50 transition-colors mt-2">Portal do Barbeiro</button>
             </div>
           </div>
         )}
@@ -299,23 +319,32 @@ export default function Home() {
         <div className="absolute right-4 bottom-1/4 w-3 h-64 barber-pole-bg opacity-40 hidden lg:block transform skew-y-12" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center w-full">
+          {/* Logo com animação de entrada */}
           <div className="flex justify-center mb-8 relative">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 md:w-80 md:h-80 bg-heritage-red/20 rounded-full blur-3xl pointer-events-none" />
-            <img src="/logo-semfundo.png" alt="MK e BALÃO Barbearia" className="relative z-10 w-72 md:w-96 lg:w-[480px] h-auto object-contain" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 md:w-64 md:h-64 bg-heritage-red/15 rounded-full blur-3xl pointer-events-none" />
+            <img
+              src="/logo-semfundo.png"
+              alt="MK e BALÃO Barbearia"
+              fetchPriority="high"
+              className="hero-logo hero-logo-idle relative z-10 w-72 md:w-80 lg:w-[400px] h-auto object-contain"
+            />
           </div>
 
-          <div className="flex items-center justify-center w-full max-w-3xl mx-auto mb-10">
+          {/* Tagline divisor */}
+          <div className="hero-divider flex items-center justify-center w-full max-w-3xl mx-auto mb-10">
             <div className="h-px bg-gradient-to-r from-transparent via-chalk/40 to-chalk/40 w-full" />
             <span className="px-6 font-sans-condensed uppercase tracking-widest text-sm text-chalk/70 whitespace-nowrap">O Ritual do Homem Moderno</span>
             <div className="h-px bg-gradient-to-l from-transparent via-chalk/40 to-chalk/40 w-full" />
           </div>
 
-          <p className="font-sans-body text-lg md:text-xl text-chalk/60 max-w-xl mx-auto mb-12 font-light leading-relaxed">
+          {/* Copy */}
+          <p className="hero-tagline font-sans-body text-lg md:text-xl text-chalk/60 max-w-xl mx-auto mb-12 font-light leading-relaxed">
             Fade impecável, tesoura precisa e colorimetria avançada.<br className="hidden md:block" />
             <span className="text-chalk/80">Mais que um corte — mantemos vivas as raízes do ofício.</span>
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
+          {/* CTAs */}
+          <div className="hero-ctas flex flex-col sm:flex-row items-center justify-center gap-5">
             <button onClick={goBook}
               className="inline-flex items-center justify-center border-classic border-chalk bg-heritage-red text-chalk font-sans-condensed uppercase tracking-[0.15em] px-10 py-4 text-lg font-bold cursor-pointer hover:bg-chalk hover:text-midnight transition-colors w-full sm:w-auto shadow-[6px_6px_0px_0px_rgba(244,244,242,0.08)] hover:shadow-[2px_2px_0px_0px_rgba(244,244,242,0.08)] hover:translate-x-1 hover:translate-y-1 duration-200">
               Agendar Agora
@@ -327,7 +356,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 hidden md:flex flex-col items-center gap-2 animate-bounce opacity-40">
+        <div className="hero-scroll-hint absolute bottom-8 left-1/2 transform -translate-x-1/2 hidden md:flex flex-col items-center gap-2 animate-bounce opacity-40">
           <span className="font-sans-condensed text-[9px] uppercase tracking-[0.3em] text-chalk">Rolar</span>
           <svg className="w-5 h-5 text-chalk" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
@@ -338,18 +367,18 @@ export default function Home() {
       {/* ── TICKER ── */}
       <div className="border-y-classic border-chalk bg-heritage-red overflow-hidden py-4">
         <div className="flex whitespace-nowrap font-sans-condensed uppercase tracking-widest text-chalk font-bold text-lg md:text-xl md:justify-center">
-          <div className="flex animate-[ticker_20s_linear_infinite] md:animate-none">
-            <span className="mx-6">★ 5.0 AVALIAÇÕES</span>
+          <div className="flex animate-[ticker_12s_linear_infinite] md:animate-none">
+            <span className="mx-6">✂ 5.0 AVALIAÇÕES NO GOOGLE</span>
             <span className="mx-6 hidden md:inline">•</span>
-            <span className="mx-6">MESA DE SINUCA</span>
+            <span className="mx-6">✂ MESA DE SINUCA</span>
             <span className="mx-6 hidden md:inline">•</span>
-            <span className="mx-6">DETALHISMO EM CADA CORTE</span>
+            <span className="mx-6">✂ DETALHISMO EM CADA CORTE</span>
             <span className="mx-6 hidden md:inline">•</span>
-            <span className="mx-6">PIRAJU - SP</span>
-            <span className="mx-6 md:hidden">★ 5.0 AVALIAÇÕES</span>
-            <span className="mx-6 md:hidden">MESA DE SINUCA</span>
-            <span className="mx-6 md:hidden">DETALHISMO EM CADA CORTE</span>
-            <span className="mx-6 md:hidden">PIRAJU - SP</span>
+            <span className="mx-6">✂ PIRAJU - SP</span>
+            <span className="mx-6 md:hidden">✂ 5.0 AVALIAÇÕES NO GOOGLE</span>
+            <span className="mx-6 md:hidden">✂ MESA DE SINUCA</span>
+            <span className="mx-6 md:hidden">✂ DETALHISMO EM CADA CORTE</span>
+            <span className="mx-6 md:hidden">✂ PIRAJU - SP</span>
           </div>
         </div>
       </div>
@@ -365,13 +394,18 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {SERVICES.map((svc, i) => (
-              <div key={i} className={`service-card group ${svc.highlight ? 'relative overflow-hidden' : ''}`}>
-                {svc.highlight && <div className="absolute right-0 top-0 w-16 h-16 bg-heritage-red/10 rounded-bl-full group-hover:bg-heritage-red/20 transition-colors" />}
+              <div key={i} className={`service-card group reveal reveal-d${Math.min(i + 1, 5)} ${svc.highlight ? 'relative overflow-hidden' : ''}`}>
+                {svc.highlight && (
+                  <>
+                    <div className="absolute right-0 top-0 w-16 h-16 bg-heritage-red/10 rounded-bl-full group-hover:bg-heritage-red/20 transition-colors" />
+                    <span className="absolute top-3 right-3 font-sans-condensed text-[9px] uppercase tracking-widest bg-heritage-red text-chalk px-2 py-0.5 font-bold z-20">Premium</span>
+                  </>
+                )}
                 <div className="flex justify-between items-start mb-6 relative z-10">
                   <div className="text-heritage-red group-hover:text-chalk transition-colors">
                     {svc.icon}
                   </div>
-                  <span className="font-sans-condensed text-xl font-bold text-chalk text-right">{svc.price}</span>
+                  <span className="font-sans-condensed text-xl font-bold text-heritage-gold text-right">{svc.price}</span>
                 </div>
                 <h4 className="font-sans-condensed text-2xl uppercase tracking-wider text-chalk mb-2 relative z-10">{svc.name}</h4>
                 <p className="font-sans-body text-chalk/60 text-sm relative z-10">{svc.desc}</p>
@@ -407,7 +441,7 @@ export default function Home() {
             <div className="w-full lg:w-2/3">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 {barbers.map((b, i) => (
-                  <div key={b.slug || i} className={`border-classic border-chalk p-2 bg-surface transform ${i === 1 ? 'sm:translate-y-8' : ''} hover:-translate-y-2 transition-transform duration-500 group relative`}>
+                  <div key={b.slug || i} className={`border-classic border-chalk p-2 bg-surface transform reveal reveal-d${i + 1} ${i === 1 ? 'sm:translate-y-8' : ''} hover:-translate-y-2 transition-transform duration-500 group relative`}>
                     <div className={`absolute -top-3 -right-3 ${i < 2 ? 'bg-heritage-red text-chalk' : 'bg-chalk text-midnight font-bold'} font-sans-condensed text-[10px] uppercase tracking-widest px-3 py-1 border-classic border-chalk z-10`}>
                       {i < 2 ? 'Fundador' : 'Barbeiro'}
                     </div>
@@ -475,7 +509,8 @@ export default function Home() {
                 {b.phone && (
                   <a href={`https://wa.me/${b.phone}?text=Olá%20${encodeURIComponent(b.name.split(' ')[0])}!%20Quero%20agendar%20um%20horário%20com%20você%20na%20MK%20e%20Balão.`}
                     target="_blank" rel="noopener"
-                    className="inline-flex items-center justify-center border-classic border-chalk bg-transparent text-chalk font-sans-condensed uppercase tracking-[0.15em] py-2.5 text-xs w-full group-hover:bg-heritage-red group-hover:border-heritage-red group-hover:text-chalk transition-all duration-300">
+                    className="inline-flex items-center justify-center gap-2 border-classic border-chalk bg-transparent text-chalk font-sans-condensed uppercase tracking-[0.15em] py-2.5 text-xs w-full group-hover:bg-heritage-red group-hover:border-heritage-red group-hover:text-chalk transition-all duration-300">
+                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
                     Agendar com {b.name.split(' ')[0]}
                   </a>
                 )}
@@ -495,18 +530,23 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { init:'M', name:'Marcos V.',  since:'Cliente há 2 anos',   text:'"Melhor degradê de Piraju sem dúvidas. A resenha é sempre garantida, a sinuca sempre pronta e o Balão acertou em cheio no meu platinado. Sou cliente fixo."' },
-              { init:'T', name:'Thiago S.',  since:'Avaliação do Google', text:'"Corto com o MK faz tempo e a evolução deles é absurda. Gabriel entrou pro time e manteve o mesmo padrão alto. Não troco por nenhuma outra."' },
-              { init:'F', name:'Felipe C.',  since:'Cliente Novo',         text:'"Fiz a barba com toalha quente e foi uma experiência foda. O corte na tesoura do MK tem muita técnica. Estrutura impecável no centro da cidade."' },
+              { init:'M', name:'Marcos V.',  since:'Cliente há 2 anos',   color:'bg-heritage-red',  google: false, text:'"Melhor degradê de Piraju sem dúvidas. A resenha é sempre garantida, a sinuca sempre pronta e o Balão acertou em cheio no meu platinado. Sou cliente fixo."' },
+              { init:'T', name:'Thiago S.',  since:'Avaliação do Google', color:'bg-heritage-blue', google: true,  text:'"Corto com o MK faz tempo e a evolução deles é absurda. Gabriel entrou pro time e manteve o mesmo padrão alto. Não troco por nenhuma outra."' },
+              { init:'F', name:'Felipe C.',  since:'Cliente Novo',         color:'bg-heritage-gold', google: false, text:'"Fiz a barba com toalha quente e foi uma experiência foda. O corte na tesoura do MK tem muita técnica. Estrutura impecável no centro da cidade."' },
             ].map((r, i) => (
-              <div key={i} className="border-classic border-chalk/20 bg-midnight p-8 hover:border-heritage-red/50 transition-colors">
-                <div className="flex text-heritage-red mb-4">{[...Array(5)].map((_,s) => <span key={s}>{STAR}</span>)}</div>
+              <div key={i} className={`border-classic border-chalk/20 bg-midnight p-8 hover:border-heritage-red/50 transition-colors reveal reveal-d${i + 1}`}>
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex text-heritage-red">{[...Array(5)].map((_,s) => <span key={s}>{STAR}</span>)}</div>
+                  {r.google && (
+                    <span className="font-sans-condensed text-[9px] uppercase tracking-widest text-chalk/40 border border-chalk/15 px-2 py-0.5">Google</span>
+                  )}
+                </div>
                 <p className="font-sans-body text-chalk/80 italic mb-6">{r.text}</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-chalk/10 flex items-center justify-center font-sans-condensed font-bold text-chalk">{r.init}</div>
+                  <div className={`w-10 h-10 rounded-full ${r.color} flex items-center justify-center font-sans-condensed font-bold text-chalk`}>{r.init}</div>
                   <div>
                     <h5 className="font-sans-condensed uppercase tracking-widest text-sm text-chalk">{r.name}</h5>
-                    <span className="font-sans-body text-xs text-chalk/50">{r.since}</span>
+                    <span className="font-sans-body text-xs text-chalk/55">{r.since}</span>
                   </div>
                 </div>
               </div>
@@ -534,7 +574,7 @@ export default function Home() {
               <div key={g.id} className="aspect-square border-classic border-chalk/30 group relative overflow-hidden">
                 <img src={g.url} alt={g.label} className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-midnight/80 to-transparent opacity-60 group-hover:opacity-90 transition-opacity" />
-                <div className="absolute inset-0 flex flex-col items-center justify-end p-4 text-center">
+                <div className="absolute inset-0 flex flex-col items-center justify-end p-4 text-center translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
                   <span className="font-sans-condensed uppercase tracking-widest text-sm text-chalk font-bold drop-shadow-lg">{g.label}</span>
                 </div>
                 <a href="https://www.instagram.com/barbeariamkebalao/" target="_blank" rel="noopener"
@@ -656,7 +696,22 @@ export default function Home() {
                     <FaClock className="w-6 h-6 text-chalk" />
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-sans-condensed text-xl uppercase tracking-widest text-chalk mb-3">Horário de Funcionamento</h4>
+                    <h4 className="font-sans-condensed text-xl uppercase tracking-widest text-chalk mb-3 flex items-center gap-3">
+                      Horário de Funcionamento
+                      {(() => {
+                        const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }))
+                        const h = now.getHours(), d = now.getDay()
+                        const open = d >= 1 && d <= 5 ? (h >= 9 && h < 19) : d === 6 ? (h >= 9 && h < 20) : false
+                        return open ? (
+                          <span className="flex items-center gap-1.5 font-sans-condensed text-[10px] uppercase tracking-widest text-green-400 border border-green-400/30 px-2 py-0.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-ping inline-block" />
+                            Aberto
+                          </span>
+                        ) : (
+                          <span className="font-sans-condensed text-[10px] uppercase tracking-widest text-chalk/30 border border-chalk/15 px-2 py-0.5">Fechado</span>
+                        )
+                      })()}
+                    </h4>
                     <table className="w-full font-sans-body text-sm">
                       <tbody>
                         <tr className="border-b border-chalk/10">
@@ -683,16 +738,22 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Mapa placeholder */}
-            <div className="relative w-full border-classic border-chalk bg-[#111] overflow-hidden flex flex-col items-center justify-center p-6 text-center"
-              style={{ aspectRatio:'4/3', backgroundImage:'linear-gradient(rgba(244,244,242,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(244,244,242,0.05) 1px,transparent 1px)', backgroundSize:'20px 20px' }}>
-              <FaMapMarkerAlt className="w-16 h-16 text-heritage-red mb-4 animate-bounce z-10" />
-              <h4 className="font-sans-condensed text-2xl uppercase tracking-widest text-chalk mb-2 z-10">Praça Ataliba Leonel, 200</h4>
-              <p className="font-sans-body text-chalk/60 mb-6 z-10">Centro, Piraju - SP</p>
-              <a href="https://maps.google.com/?q=Praça+Ataliba+Leonel,+200+-+Centro,+Piraju" target="_blank" rel="noopener"
-                className="inline-flex items-center justify-center border-classic border-chalk bg-transparent text-chalk font-sans-condensed uppercase tracking-[0.15em] px-6 py-2 text-sm hover:bg-chalk hover:text-midnight transition-colors z-10">
-                Abrir no GPS
-              </a>
+            {/* Mapa real */}
+            <div className="relative w-full border-classic border-chalk overflow-hidden" style={{ aspectRatio:'4/3' }}>
+              <iframe
+                title="Localização MK e BALÃO Barbearia"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3673.8!2d-49.0!3d-23.19!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2sPra%C3%A7a+Ataliba+Leonel%2C+200+-+Centro%2C+Piraju+-+SP!5e0!3m2!1spt-BR!2sbr!4v1690000000000"
+                className="absolute inset-0 w-full h-full border-0 grayscale"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                allowFullScreen
+              />
+              <div className="absolute bottom-3 left-3 right-3 z-10">
+                <a href="https://maps.google.com/?q=Praça+Ataliba+Leonel,+200+-+Centro,+Piraju" target="_blank" rel="noopener"
+                  className="inline-flex items-center justify-center border-classic border-chalk bg-midnight/90 backdrop-blur-sm text-chalk font-sans-condensed uppercase tracking-[0.15em] px-6 py-2 text-sm hover:bg-chalk hover:text-midnight transition-colors w-full">
+                  <FaMapMarkerAlt className="w-4 h-4 mr-2" /> Abrir no GPS
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -727,7 +788,10 @@ export default function Home() {
               <div key={i} className="border-classic border-chalk/20 bg-midnight overflow-hidden">
                 <button onClick={() => setFaqOpen(faqOpen === i ? null : i)}
                   className="w-full px-6 py-4 flex justify-between items-center text-left focus:outline-none hover:bg-chalk/5 transition-colors">
-                  <span className="font-sans-condensed uppercase tracking-widest text-chalk font-bold pr-4">{item.q}</span>
+                  <div className="flex items-start gap-3 pr-4">
+                    <span className="text-heritage-red font-sans-condensed font-bold text-sm shrink-0 mt-0.5">?</span>
+                    <span className="font-sans-condensed uppercase tracking-widest text-chalk font-bold">{item.q}</span>
+                  </div>
                   <svg className={`w-5 h-5 text-heritage-red shrink-0 transition-transform duration-300 ${faqOpen === i ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth="2" d="M19 9l-7 7-7-7" />
                   </svg>
@@ -745,7 +809,13 @@ export default function Home() {
       <footer className="bg-[#050505] border-t-classic border-chalk pt-16 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-8 text-center md:text-left">
-            <img src="/logo-escudo.jpg" alt="MK e BALÃO" className="h-20 w-auto object-contain mx-auto md:mx-0" />
+            <div className="flex flex-col items-center md:items-start gap-2">
+              <img src="/logo-escudo.jpg" alt="MK e BALÃO" className="h-28 w-auto object-contain" />
+              <a href="https://wa.me/5514996598304" target="_blank" rel="noopener"
+                className="font-sans-condensed text-xs uppercase tracking-widest text-chalk/40 hover:text-heritage-red transition-colors">
+                (14) 99659-8304
+              </a>
+            </div>
             <div className="flex flex-wrap justify-center gap-6 font-sans-condensed uppercase tracking-widest text-sm">
               {[['servicos','Serviços'],['sobre','Sobre'],['clube','Clube'],['galeria','Galeria']].map(([id,label]) => (
                 <button key={id} onClick={() => scrollTo(id)} className="text-chalk/70 hover:text-heritage-red transition-colors">{label}</button>
@@ -769,18 +839,19 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* ── WhatsApp FAB ── */}
+      {/* ── Agendar FAB ── */}
       <div className="fixed bottom-6 right-6 z-50 group">
-        <div className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-30" />
+        <div className="absolute inset-0 rounded-full bg-heritage-red animate-ping opacity-20" />
         <button onClick={goBook}
-          className="relative w-16 h-16 rounded-full bg-[#25D366] flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-          aria-label="Agendar">
-          <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+          className="relative w-16 h-16 rounded-full bg-heritage-red border-2 border-chalk/30 flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+          aria-label="Agendar horário">
+          <svg className="w-7 h-7 text-chalk" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="square">
+            <path d="M6 9l6-6 6 6M6 15l6 6 6-6" />
+            <line x1="12" y1="3" x2="12" y2="21" />
           </svg>
         </button>
         <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-midnight border border-chalk/20 text-chalk font-sans-condensed text-xs uppercase tracking-widest px-3 py-1.5 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-          Agendar no Zap
+          Agendar Horário
         </span>
       </div>
     </div>

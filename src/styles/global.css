@@ -511,6 +511,21 @@ img { display: block; max-width: 100%; }
 .addon-item__check { width: 16px; height: 16px; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; }
 .addon-item.selected .addon-item__check { background: var(--red); border-color: var(--red); }
 
+/* ── Addon Total Preview ── */
+.addon-total-preview {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 0.5rem; padding: 0.5rem 0.875rem;
+  background: rgba(211,43,47,0.07); border: 1px solid rgba(211,43,47,0.25);
+  animation: fadeUp 0.2s ease;
+}
+.addon-total-preview__label {
+  font-family: var(--font-heading); font-size: 0.65rem;
+  text-transform: uppercase; letter-spacing: 0.1em; color: var(--dim); font-weight: 600;
+}
+.addon-total-preview__value {
+  font-family: var(--font-heading); font-size: 1rem; font-weight: 900; color: var(--gold);
+}
+
 /* ── Booking Footer ── */
 .booking-footer {
   flex-shrink: 0; padding: 0.625rem 1rem; border-top: 1px solid var(--border);
@@ -1618,6 +1633,72 @@ img { display: block; max-width: 100%; }
 .manual-faq-item:last-child { border-bottom: none; }
 .manual-faq-q { font-size: 0.875rem; color: var(--chalk); font-weight: 600; margin-bottom: 0.5rem; }
 .manual-faq-a { font-size: 0.825rem; color: var(--dim); line-height: 1.6; }
+
+/* Subsection heading */
+.manual-subsection-title {
+  font-family: var(--font-heading); font-size: 0.6rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.18em; color: var(--gold);
+  margin: 1.5rem 0 0.25rem; padding: 0 0.25rem;
+}
+
+/* Rules list */
+.manual-rules-list { display: flex; flex-direction: column; gap: 0; }
+.manual-rule {
+  display: flex; align-items: baseline; gap: 0.75rem;
+  padding: 0.75rem 0; border-bottom: 1px solid var(--border);
+}
+.manual-rule:last-child { border-bottom: none; }
+.manual-rule__label { font-size: 0.825rem; color: var(--dim); flex: 0 0 200px; }
+.manual-rule__value { font-size: 0.875rem; color: var(--chalk); font-weight: 600; }
+
+/* Intervals */
+.manual-intervals { display: flex; flex-direction: column; gap: 0; margin: 0.75rem 0; }
+.manual-interval-item {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.6rem 0; border-bottom: 1px solid var(--border);
+}
+.manual-interval-item:last-child { border-bottom: none; }
+.manual-interval-badge {
+  font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700;
+  background: rgba(180,142,76,.12); color: var(--gold);
+  padding: 0.2rem 0.5rem; border-radius: 4px; flex-shrink: 0;
+}
+.manual-interval-desc { font-size: 0.825rem; color: var(--dim); }
+
+/* Example box */
+.manual-example {
+  background: rgba(180,142,76,.06); border: 1px solid rgba(180,142,76,.18);
+  border-radius: 6px; padding: 0.875rem 1rem; margin-top: 0.75rem;
+  font-size: 0.825rem; color: var(--dim); line-height: 1.6;
+}
+.manual-example__title {
+  font-family: var(--font-heading); font-size: 0.6rem; text-transform: uppercase;
+  letter-spacing: 0.15em; color: var(--gold); margin-bottom: 0.4rem;
+}
+
+/* Note box */
+.manual-note {
+  background: rgba(255,255,255,.04); border-left: 3px solid var(--gold);
+  padding: 0.75rem 1rem; margin-top: 0.875rem; border-radius: 0 4px 4px 0;
+  font-size: 0.8rem; color: var(--dim); line-height: 1.6;
+}
+
+/* Routes list */
+.manual-routes-list { display: flex; flex-direction: column; gap: 0; }
+.manual-route-item {
+  display: flex; align-items: baseline; gap: 0.75rem;
+  padding: 0.65rem 0; border-bottom: 1px solid var(--border);
+}
+.manual-route-item:last-child { border-bottom: none; }
+.manual-route-path {
+  font-family: var(--font-mono); font-size: 0.75rem; color: var(--gold);
+  flex: 0 0 auto; min-width: 160px;
+}
+.manual-route-desc { font-size: 0.825rem; color: var(--dim); }
+
+/* Status notes */
+.manual-status-notes { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.875rem; font-size: 0.825rem; color: var(--dim); }
+.manual-status-notes > div { display: flex; align-items: center; gap: 0.5rem; }
 
 /* ══════════════════════════════════════════════════════════════
    MANUAL DE MARCA
@@ -3083,5 +3164,269 @@ img { display: block; max-width: 100%; }
   .galeria-grid       { grid-template-columns: repeat(2, 1fr); }
   .mgmt-field-grid    { grid-template-columns: 1fr 1fr; }
   .mgmt-field--wide   { grid-column: span 2; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Home — Hero animations
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes heroLogoIn {
+  0%   { opacity: 0; transform: scale(0.84) translateY(-24px);
+         filter: drop-shadow(0 0 0px rgba(211,43,47,0)); }
+  65%  { opacity: 1; transform: scale(1.04) translateY(2px);
+         filter: drop-shadow(0 0 32px rgba(211,43,47,0.35)); }
+  100% { opacity: 1; transform: scale(1) translateY(0);
+         filter: drop-shadow(0 0 14px rgba(211,43,47,0.18)); }
+}
+@keyframes heroLogoGlow {
+  0%, 100% { filter: drop-shadow(0 0 10px rgba(211,43,47,0.12)); }
+  50%       { filter: drop-shadow(0 0 28px rgba(211,43,47,0.28)); }
+}
+@keyframes heroFadeUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes heroDividerIn {
+  from { opacity: 0; transform: scaleX(0.4); }
+  to   { opacity: 1; transform: scaleX(1); }
+}
+
+.hero-logo {
+  animation: heroLogoIn 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.hero-logo-idle {
+  animation: heroLogoGlow 3.6s ease-in-out infinite;
+  animation-delay: 1.2s;
+}
+.hero-divider {
+  animation: heroDividerIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.75s both;
+}
+.hero-tagline {
+  animation: heroFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.85s both;
+}
+.hero-copy {
+  animation: heroFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.0s both;
+}
+.hero-ctas {
+  animation: heroFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.15s both;
+}
+.hero-scroll-hint {
+  animation: heroFadeUp 0.5s ease 1.6s both;
+}
+
+/* ── Section fade-in ao entrar no viewport ───────────────── */
+.reveal {
+  opacity: 0; transform: translateY(28px);
+  transition: opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1);
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-d1 { transition-delay: 0.1s; }
+.reveal-d2 { transition-delay: 0.2s; }
+.reveal-d3 { transition-delay: 0.3s; }
+.reveal-d4 { transition-delay: 0.4s; }
+.reveal-d5 { transition-delay: 0.5s; }
+
+/* ── Nav logo — one-time pulse on load ───────────────────── */
+@keyframes navLogoPulse {
+  0%   { filter: drop-shadow(0 0 0px rgba(211,43,47,0)); }
+  40%  { filter: drop-shadow(0 0 16px rgba(211,43,47,0.5)); }
+  100% { filter: drop-shadow(0 0 0px rgba(211,43,47,0)); }
+}
+.nav-logo-pulse {
+  animation: navLogoPulse 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
+}
+
+/* ── Booking: staggered choice buttons ───────────────────── */
+.chat-action-btn:nth-child(1) { animation-delay: 0s; }
+.chat-action-btn:nth-child(2) { animation-delay: 0.06s; }
+.chat-action-btn:nth-child(3) { animation-delay: 0.12s; }
+.chat-action-btn:nth-child(4) { animation-delay: 0.18s; }
+.chat-action-btn:nth-child(5) { animation-delay: 0.24s; }
+.chat-action-btn:nth-child(6) { animation-delay: 0.30s; }
+
+/* ── Booking: progress bar smooth transition ─────────────── */
+.step-divider {
+  transition: background 0.35s ease;
+}
+.step-node {
+  transition: border-color 0.35s ease, background 0.35s ease, color 0.35s ease;
+}
+
+/* ── Button pressed feedback ─────────────────────────────── */
+.chat-action-btn:active:not(:disabled) {
+  transform: scale(0.97);
+  transition: transform 0.08s ease;
+}
+.btn-primary:active:not(:disabled),
+.btn-outline:active:not(:disabled) {
+  transform: scale(0.98) translateY(1px);
+  transition: transform 0.08s ease, background 0.25s, color 0.25s;
+}
+
+/* ── Mobile: scroll-padding-bottom for inputs ───────────── */
+@media (max-width: 640px) {
+  .booking-page {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .action-bar {
+    padding-bottom: max(0.75rem, calc(env(safe-area-inset-bottom) + 0.5rem));
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Barbeiro — novas features (Q1-Q3, S1-S3)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Q1: WA confirm link no card ─────────────────────────── */
+.barb-card__phone-row {
+  display: flex; align-items: center; gap: 0.625rem; margin-bottom: 0.25rem;
+}
+.barb-card__wa-confirm {
+  font-size: 0.7rem; font-family: var(--font-heading); font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--whatsapp); border: 1px solid rgba(37,211,102,0.3);
+  padding: 0.15rem 0.5rem; white-space: nowrap;
+  transition: background 0.15s;
+}
+.barb-card__wa-confirm:hover { background: rgba(37,211,102,0.08); }
+
+/* ── Q1: Client name as button ───────────────────────────── */
+.barb-card__client--btn {
+  display: block; text-align: left; padding: 0; background: none; border: none;
+  cursor: pointer; color: var(--chalk);
+  font-size: 1.05rem; font-weight: 600; margin-bottom: 0.125rem;
+  border-bottom: 1px dotted transparent;
+  transition: border-color 0.15s, color 0.15s;
+}
+.barb-card__client--btn:hover {
+  color: var(--gold); border-bottom-color: rgba(212,175,55,0.4);
+}
+
+/* ── Q2: Próximo cliente em destaque ─────────────────────── */
+.barb-card--next {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold), 0 4px 20px rgba(212,175,55,0.12);
+}
+.barb-next-badge {
+  display: inline-block;
+  background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.5);
+  color: var(--gold); font-family: var(--font-heading); font-size: 0.62rem;
+  font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 0.15rem 0.45rem; border-radius: 3px; white-space: nowrap;
+}
+.barb-next-badge--now {
+  background: rgba(211,43,47,0.15); border-color: rgba(211,43,47,0.5);
+  color: var(--red); animation: pulse-badge 1.4s ease-in-out infinite;
+}
+@keyframes pulse-badge {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+/* ── Q3: Bloquear dia ────────────────────────────────────── */
+.barb-qa-btn--active {
+  border-color: var(--red); color: var(--red);
+}
+.barb-block-section {
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 1rem; margin-bottom: 1rem;
+}
+.barb-block-section__title {
+  font-family: var(--font-heading); font-size: 0.7rem;
+  text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold);
+  margin-bottom: 0.75rem;
+}
+.barb-block-row {
+  display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.75rem;
+}
+.barb-block-input {
+  background: var(--surface-alt); border: 1px solid var(--border);
+  color: var(--chalk); font-family: var(--font-body); font-size: 0.82rem;
+  padding: 0.45rem 0.625rem; outline: none; min-width: 0;
+}
+.barb-block-input:focus { border-color: var(--gold); }
+.barb-block-input--reason { flex: 1; min-width: 120px; }
+.barb-block-list { display: flex; flex-direction: column; gap: 0.375rem; }
+.barb-block-item {
+  display: flex; align-items: center; gap: 0.5rem;
+  background: var(--surface-alt); border: 1px solid var(--border);
+  padding: 0.4rem 0.75rem; font-size: 0.82rem;
+}
+.barb-block-item__date {
+  font-family: var(--font-heading); font-weight: 700; color: var(--chalk); flex-shrink: 0;
+}
+.barb-block-item__reason { color: var(--dim); font-size: 0.78rem; flex: 1; }
+.barb-block-item__del {
+  margin-left: auto; background: none; border: none; cursor: pointer;
+  color: var(--dim); font-size: 0.75rem; padding: 0.2rem 0.35rem;
+  transition: color 0.15s;
+}
+.barb-block-item__del:hover { color: var(--red); }
+.barb-block-empty { color: var(--dim); font-size: 0.8rem; }
+
+/* ── S2: Estou atrasado ──────────────────────────────────── */
+.action-btn-sm--late {
+  display: inline-flex; align-items: center;
+  padding: 0.3rem 0.625rem;
+  border: 1px solid rgba(212,175,55,0.3); background: transparent;
+  color: var(--gold); font-family: var(--font-heading); font-size: 0.65rem;
+  font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer; text-decoration: none; transition: background 0.15s;
+}
+.action-btn-sm--late:hover { background: rgba(212,175,55,0.08); }
+
+/* ── S1: Modal histórico do cliente ──────────────────────── */
+.barb-history-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.72); display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+}
+.barb-history-modal {
+  background: var(--surface); border: 1px solid var(--border);
+  width: 100%; max-width: 440px; max-height: 80vh;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.barb-history-modal__head {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.barb-history-modal__name {
+  font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--chalk);
+}
+.barb-history-modal__phone { font-size: 0.8rem; color: var(--dim); margin-top: 0.2rem; }
+.barb-history-modal__close {
+  background: none; border: none; cursor: pointer;
+  color: var(--dim); font-size: 1rem; padding: 0.25rem 0.375rem;
+  transition: color 0.15s;
+}
+.barb-history-modal__close:hover { color: var(--chalk); }
+.barb-history-modal__loading {
+  padding: 2rem; text-align: center; color: var(--dim); font-size: 0.85rem;
+}
+.barb-history-modal__stats {
+  display: flex; gap: 0; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.barb-history-stat {
+  flex: 1; padding: 0.875rem 1.25rem; border-right: 1px solid var(--border); text-align: center;
+}
+.barb-history-stat:last-child { border-right: none; }
+.barb-history-stat__val {
+  font-family: var(--font-heading); font-size: 1.4rem; font-weight: 900; color: var(--gold);
+}
+.barb-history-stat__label { font-size: 0.7rem; color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; }
+.barb-history-modal__list { overflow-y: auto; flex: 1; padding: 0.5rem 0; }
+.barb-history-item {
+  display: flex; align-items: baseline; gap: 0.75rem;
+  padding: 0.6rem 1.25rem; border-bottom: 1px solid rgba(244,244,242,0.06);
+}
+.barb-history-item:last-child { border-bottom: none; }
+.barb-history-item__date {
+  font-family: var(--font-heading); font-size: 0.72rem; font-weight: 700;
+  color: var(--chalk); white-space: nowrap; flex-shrink: 0;
+}
+.barb-history-item__services { font-size: 0.78rem; color: var(--dim); flex: 1; }
+.barb-history-item__total {
+  font-family: var(--font-heading); font-size: 0.82rem; font-weight: 700;
+  color: var(--gold); white-space: nowrap;
 }
 

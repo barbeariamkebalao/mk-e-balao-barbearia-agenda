@@ -21,9 +21,13 @@ Sistema completo de agendamento online para a **MK e BALÃO Barbearia** (Piraju-
 
 ### Agendamento público (`/agendar`)
 - Chatbot conversacional com 3 personalidades (clássico, urbano, carismático)
-- Fluxo: **Você → Profissional → Serviço → Horário → OK**
-- Reconhecimento de cliente recorrente via `localStorage`
-- "Primeiro Disponível" com seleção aleatória justa entre barbeiros
+- Fluxo: **Nome → Profissional → Categoria → Serviço → Adicionais → Horário → OK**
+- Coleta nome antes de escolher o barbeiro — saudação personalizada
+- **Cliente recorrente:** detecta agendamento futuro via `localStorage` + Supabase; exibe card com opção de cancelar ou agendar novo (ver `docs/features/chatbot-cliente-recorrente.md`)
+- Auto-pulo de categoria quando barbeiro tem somente uma disponível
+- Adicionais: texto do botão e total estimado atualizam em tempo real conforme seleção
+- "Primeiro Disponível" com shuffle justo (sem viés por `sort_order`) + filtro por serviços habilitados do barbeiro
+- Booking nasce como `confirmado` — sem etapa de aprovação manual (ver `docs/decisoes/ADR-001-status-flow.md`)
 - Máscara e validação de telefone brasileira (DDD + celular/fixo)
 - Duração total do serviço exibida na confirmação
 - Token de cancelamento gerado no client-side (sem round-trip)
@@ -40,7 +44,7 @@ Sistema completo de agendamento online para a **MK e BALÃO Barbearia** (Piraju-
 #### Módulos do Admin
 | Tab | Função |
 |-----|--------|
-| Hoje / Todos | Gestão de agendamentos com ciclo de status |
+| Hoje / Todos | Gestão de agendamentos — ciclo de status: confirmado → concluido / cancelado |
 | Analytics | Receita por período, por barbeiro, taxa de cancelamento |
 | Agenda | Disponibilidade semanal por barbeiro com validação de horário |
 | Serviços | CRUD completo com categorias, badges, preço fixo / a partir de |
@@ -58,6 +62,12 @@ Sistema completo de agendamento online para a **MK e BALÃO Barbearia** (Piraju-
 - Realtime: novo agendamento notifica instantaneamente
 - Ações rápidas: agendar para cliente, copiar link, instalar PWA
 - Módulo Fiado com busca por nome de cliente
+- **Q1 WA ao cliente:** botão "✓ WA" em cada card abre WhatsApp com mensagem de confirmação pronta
+- **Q2 Próximo em destaque:** badge "em X min" / "AGORA" + borda dourada no próximo agendamento do dia
+- **Q3 Bloquear dia próprio:** barbeiro registra folga/atestado sem precisar do admin
+- **S1 Histórico do cliente:** clicar no nome abre modal com visitas, total gasto e serviços realizados
+- **S2 Estou atrasado:** botão abre WA com aviso de atraso para o cliente
+- **S3 Intervalo self-service:** aba Config com select 30/40/50/60 min, salva diretamente no perfil
 
 ---
 
@@ -118,27 +128,41 @@ npm run preview
 ```
 src/
 ├── pages/
-│   ├── Booking.jsx          # Chatbot de agendamento
+│   ├── Booking.jsx          # Chatbot de agendamento (v3 — cliente recorrente, mybooking step)
 │   ├── Confirm.jsx          # Confirmação pós-agendamento
 │   ├── Cancel.jsx           # Cancelamento via token
-│   ├── Home.jsx             # Landing page pública
+│   ├── Home.jsx             # Landing page pública (open/closed, FAQ, galeria, ticker, FAB)
+│   ├── Login.jsx            # Login + recuperação de senha
 │   ├── Admin.jsx            # Shell do painel admin
-│   ├── Barbeiro.jsx         # Painel do barbeiro
+│   ├── Barbeiro.jsx         # Painel do barbeiro (Q1-Q3, S1-S3)
+│   ├── Manual.jsx           # Manual do sistema (8 seções — só para autenticados)
 │   └── admin/
-│       ├── AgendaPanel.jsx
-│       ├── AnalyticsPanel.jsx
-│       ├── BarberServicesPanel.jsx
-│       ├── ClubePanel.jsx
-│       ├── ConfigPanel.jsx
-│       ├── EquipePanel.jsx
-│       ├── FiadoPanel.jsx
-│       ├── GaleriaPanel.jsx
-│       └── ServicosPanel.jsx
+│       ├── AgendaPanel.jsx       # Disponibilidade semanal por barbeiro (sábado 20:00)
+│       ├── AnalyticsPanel.jsx    # Receita por período e por barbeiro
+│       ├── BarberServicesPanel.jsx # Matriz serviços × barbeiro
+│       ├── ChatAgendaPanel.jsx   # Personalidade do chatbot
+│       ├── ClubePanel.jsx        # Planos de assinatura
+│       ├── ConfigPanel.jsx       # Dados da barbearia, dias bloqueados
+│       ├── EquipePanel.jsx       # CRUD barbeiros + intervalo por barbeiro (sábado 20:00)
+│       ├── FiadoPanel.jsx        # Crédito com busca por nome
+│       ├── GaleriaPanel.jsx      # Upload drag-and-drop + reordenação
+│       └── ServicosPanel.jsx     # CRUD completo de serviços
+├── components/
+│   └── ErrorBoundary.jsx    # Captura erros de render
 ├── lib/
 │   ├── supabase.js          # Cliente Supabase
-│   └── slots.js             # Engine de cálculo de slots
+│   ├── slots.js             # Engine de slots (almoço 12-13 hardcoded, intervalo por barbeiro)
+│   └── logger.js            # Logger de erros
 └── styles/
     └── global.css           # Design system dark vintage
+
+docs/
+├── decisoes/
+│   └── ADR-001-status-flow.md         # Por que booking nasce como "confirmado"
+└── features/
+    ├── painel-barbeiro.md             # Referência completa do painel do barbeiro
+    ├── slot-engine.md                 # Regras do motor de slots (almoço, sábado, intervalo)
+    └── chatbot-cliente-recorrente.md  # Fluxo de detecção e exibição de agendamento futuro
 ```
 
 ---

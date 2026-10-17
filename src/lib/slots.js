@@ -52,6 +52,10 @@ export function getNextDays(n = 20) {
  * @param {string} date          - "YYYY-MM-DD"
  * @returns {string[]} slots disponíveis ["09:00", "09:40", ...]
  */
+// Horário de almoço fixo para todos os barbeiros (12:00–13:00)
+const LUNCH_FROM = 12 * 60  // 720
+const LUNCH_TO   = 13 * 60  // 780
+
 export function calcSlots(barber, avail, bookings, serviceMinutes, date) {
   if (!avail || !avail.active) return []
 
@@ -66,6 +70,9 @@ export function calcSlots(barber, avail, bookings, serviceMinutes, date) {
       from: timeToMinutes(b.time.slice(0, 5)),
       to:   timeToMinutes(b.time.slice(0, 5)) + b.total_minutes,
     }))
+
+  // Bloqueia almoço 12:00–13:00 para todos os barbeiros
+  occupied.push({ from: LUNCH_FROM, to: LUNCH_TO })
 
   // Bloqueia slots passados se for hoje — hora local de Brasília
   const now = new Date()
