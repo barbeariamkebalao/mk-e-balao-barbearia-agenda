@@ -235,13 +235,11 @@ export default function Booking({ preselectedSlug = null }) {
       let bQuery = supabase.from('barbers').select('*').eq('active', true).neq('role', 'admin').order('sort_order')
       if (preselectedSlug) bQuery = bQuery.eq('slug', preselectedSlug)
       try {
-        const [{ data: b }, { data: s }, { data: bs }, { data: bd }, { data: st }] = await Promise.all([
+        const [{ data: b }, { data: s }, { data: bs }, { data: bd }] = await Promise.all([
           bQuery,
           supabase.from('services').select('*').eq('active', true).order('sort_order'),
           supabase.from('barber_services').select('barber_id, service_id'),
-          // Só datas futuras — evita carregar histórico de bloqueios antigos
           supabase.from('blocked_dates').select('date, barber_id').gte('date', today),
-          supabase.from('settings').select('bot_config').eq('id', 1).maybeSingle(),
         ])
         setBarbers(b || [])
         setServices(s || [])
@@ -253,7 +251,12 @@ export default function Booking({ preselectedSlug = null }) {
         }
         setBarberServicesMap(map)
         setAllBlockedRows(bd || [])
-        if (st?.bot_config?.personality) setBotPersonality(st.bot_config.personality)
+
+        // Settings isolado — erro aqui não impede o agendamento de funcionar
+        try {
+          const { data: st } = await supabase.from('settings').select('bot_config').eq('id', 1).maybeSingle()
+          if (st?.bot_config?.personality) setBotPersonality(st.bot_config.personality)
+        } catch {}
 
         // Busca agendamento futuro do cliente recorrente (localStorage)
         try {
