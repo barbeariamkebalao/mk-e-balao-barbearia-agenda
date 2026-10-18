@@ -1,5 +1,5 @@
 -- ============================================================
--- MK e BALÃO — Criação automática de usuários auth v4.0
+-- MK e BALÃO — Criação automática de usuários auth v4.1
 -- Supabase Dashboard → SQL Editor → Execute
 -- Outubro 2026
 --
@@ -10,7 +10,7 @@
 --
 -- SENHA PADRÃO: 123456 (trocar após o primeiro login)
 --
--- PRÉ-REQUISITO: seed.sql ou seed-runner.js já executados
+-- PRÉ-REQUISITO: seed.sql já executado
 --   (os registros em barbers precisam existir antes do UPDATE)
 -- ============================================================
 
@@ -22,18 +22,18 @@ SET row_security = off;
 
 DELETE FROM auth.identities
 WHERE provider_id IN (
-  'maikon@mkebalao.com.br',
-  'gabriel@mkebalao.com.br',
-  'daniel@mkebalao.com.br',
-  'admin@mkebalao.com.br'
+  'mk@mkebalaobarbearia.com.br',
+  'gabriel@mkebalaobarbearia.com.br',
+  'daniel@mkebalaobarbearia.com.br',
+  'admin@mkebalaobarbearia.com.br'
 );
 
 DELETE FROM auth.users
 WHERE email IN (
-  'maikon@mkebalao.com.br',
-  'gabriel@mkebalao.com.br',
-  'daniel@mkebalao.com.br',
-  'admin@mkebalao.com.br'
+  'mk@mkebalaobarbearia.com.br',
+  'gabriel@mkebalaobarbearia.com.br',
+  'daniel@mkebalaobarbearia.com.br',
+  'admin@mkebalaobarbearia.com.br'
 );
 
 -- ─────────────────────────────────────────────────────────────────
@@ -58,25 +58,25 @@ BEGIN
   ) VALUES
     ('00000000-0000-0000-0000-000000000000', uid_maikon,
      'authenticated', 'authenticated',
-     'maikon@mkebalao.com.br', crypt('123456', gen_salt('bf')), NOW(),
+     'mk@mkebalaobarbearia.com.br', crypt('123456', gen_salt('bf')), NOW(),
      NULL, '{"provider":"email","providers":["email"]}', '{}',
      false, false, false, NOW(), NOW()),
 
     ('00000000-0000-0000-0000-000000000000', uid_gabriel,
      'authenticated', 'authenticated',
-     'gabriel@mkebalao.com.br', crypt('123456', gen_salt('bf')), NOW(),
+     'gabriel@mkebalaobarbearia.com.br', crypt('123456', gen_salt('bf')), NOW(),
      NULL, '{"provider":"email","providers":["email"]}', '{}',
      false, false, false, NOW(), NOW()),
 
     ('00000000-0000-0000-0000-000000000000', uid_daniel,
      'authenticated', 'authenticated',
-     'daniel@mkebalao.com.br', crypt('123456', gen_salt('bf')), NOW(),
+     'daniel@mkebalaobarbearia.com.br', crypt('123456', gen_salt('bf')), NOW(),
      NULL, '{"provider":"email","providers":["email"]}', '{}',
      false, false, false, NOW(), NOW()),
 
     ('00000000-0000-0000-0000-000000000000', uid_admin,
      'authenticated', 'authenticated',
-     'admin@mkebalao.com.br', crypt('123456', gen_salt('bf')), NOW(),
+     'admin@mkebalaobarbearia.com.br', crypt('123456', gen_salt('bf')), NOW(),
      NULL, '{"provider":"email","providers":["email"]}', '{}',
      false, false, false, NOW(), NOW());
 
@@ -85,20 +85,20 @@ BEGIN
     id, user_id, provider_id, identity_data, provider,
     last_sign_in_at, created_at, updated_at
   ) VALUES
-    (gen_random_uuid(), uid_maikon,  'maikon@mkebalao.com.br',
-     json_build_object('sub', uid_maikon::text,  'email', 'maikon@mkebalao.com.br'),
+    (gen_random_uuid(), uid_maikon,  'mk@mkebalaobarbearia.com.br',
+     json_build_object('sub', uid_maikon::text,  'email', 'mk@mkebalaobarbearia.com.br'),
      'email', NOW(), NOW(), NOW()),
 
-    (gen_random_uuid(), uid_gabriel, 'gabriel@mkebalao.com.br',
-     json_build_object('sub', uid_gabriel::text, 'email', 'gabriel@mkebalao.com.br'),
+    (gen_random_uuid(), uid_gabriel, 'gabriel@mkebalaobarbearia.com.br',
+     json_build_object('sub', uid_gabriel::text, 'email', 'gabriel@mkebalaobarbearia.com.br'),
      'email', NOW(), NOW(), NOW()),
 
-    (gen_random_uuid(), uid_daniel,  'daniel@mkebalao.com.br',
-     json_build_object('sub', uid_daniel::text,  'email', 'daniel@mkebalao.com.br'),
+    (gen_random_uuid(), uid_daniel,  'daniel@mkebalaobarbearia.com.br',
+     json_build_object('sub', uid_daniel::text,  'email', 'daniel@mkebalaobarbearia.com.br'),
      'email', NOW(), NOW(), NOW()),
 
-    (gen_random_uuid(), uid_admin,   'admin@mkebalao.com.br',
-     json_build_object('sub', uid_admin::text,   'email', 'admin@mkebalao.com.br'),
+    (gen_random_uuid(), uid_admin,   'admin@mkebalaobarbearia.com.br',
+     json_build_object('sub', uid_admin::text,   'email', 'admin@mkebalaobarbearia.com.br'),
      'email', NOW(), NOW(), NOW());
 
   -- Vincula cada auth.user ao seu registro em barbers
@@ -123,5 +123,5 @@ SELECT
   b.user_id IS NOT NULL AS vinculado
 FROM auth.users u
 LEFT JOIN barbers b ON b.user_id = u.id
-WHERE u.email LIKE '%mkebalao.com.br'
+WHERE u.email LIKE '%mkebalaobarbearia.com.br'
 ORDER BY b.sort_order;
