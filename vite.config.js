@@ -32,19 +32,9 @@ export default defineConfig({
         scope: '/',
         categories: ['business', 'productivity'],
         icons: [
-          {
-            src: '/icons/agenda-192.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'any',
-          },
-          {
-            src: '/icons/agenda-512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any',
-          },
-          { src: '/icons/agenda-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: '/icons/admin-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/icons/admin-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: '/icons/admin-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
         shortcuts: [
           {
@@ -52,14 +42,14 @@ export default defineConfig({
             short_name: 'Agenda',
             description: 'Ver agendamentos do dia',
             url: '/barbeiro',
-            icons: [{ src: '/icons/agenda-192.png', sizes: '192x192', type: 'image/png' }],
+            icons: [{ src: '/icons/admin-192.png', sizes: '192x192', type: 'image/png' }],
           },
           {
             name: 'Agendar',
             short_name: 'Agendar',
             description: 'Fazer um agendamento',
             url: '/agendar',
-            icons: [{ src: '/icons/agenda-192.png', sizes: '192x192', type: 'image/png' }],
+            icons: [{ src: '/icons/admin-192.png', sizes: '192x192', type: 'image/png' }],
           },
         ],
       },
