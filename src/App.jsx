@@ -85,11 +85,7 @@ export default function App() {
                 {(barber) => <Portal role={barber.role} />}
               </RequireAuth>
             } />
-            <Route path="/manual"             element={
-              <RequireAuth>
-                {(barber) => <Manual role={barber.role} />}
-              </RequireAuth>
-            } />
+            <Route path="/manual"             element={<Manual />} />
             <Route path="/marca"              element={
               <RequireAuth>
                 {(barber) => <ManualMarca role={barber.role} />}

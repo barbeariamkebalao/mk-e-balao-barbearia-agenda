@@ -29,12 +29,21 @@
 
   --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --radius: 0px;
+  --vh: 1vh;
 }
 
 /* ── RESET ───────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body, #root { height: 100%; }
+html {
+  min-height: -webkit-fill-available;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 body {
+  overscroll-behavior: none;
   background: var(--midnight);
   color: var(--chalk);
   font-family: var(--font-body);
@@ -44,6 +53,12 @@ body {
 }
 a { color: inherit; text-decoration: none; }
 button { cursor: pointer; font-family: inherit; border: none; background: none; color: inherit; }
+button, a, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
 input, select, textarea { font-family: inherit; font-size: inherit; }
 img { display: block; max-width: 100%; }
 
@@ -232,7 +247,33 @@ img { display: block; max-width: 100%; }
    ════════════════════════════════════════════════════════════ */
 .booking-page {
   display: flex; flex-direction: column;
-  height: 100%; max-width: 640px; margin: 0 auto;
+  width: 100%; max-width: 640px; margin: 0 auto;
+  height: calc(var(--vh, 1vh) * 100);
+  height: -webkit-fill-available;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Lock only app screens; the institutional site keeps its document scroll. */
+html:has(.booking-page, .admin-layout, .adm-shell),
+body:has(.booking-page, .admin-layout, .adm-shell) {
+  overflow: hidden;
+}
+body:has(.booking-page, .admin-layout, .adm-shell) {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+}
+#root:has(.booking-page, .admin-layout, .adm-shell) {
+  height: 100%;
+  overflow: hidden;
+}
+@supports (height: 100dvh) {
+  :root { --vh: 1dvh; }
 }
 
 /* ── Booking Header ── */
@@ -298,8 +339,10 @@ img { display: block; max-width: 100%; }
 
 /* ── Chat Area ── */
 .chat-window {
-  flex: 1; overflow-y: auto;
-  min-height: 80px;
+  flex: 1 1 0; overflow-y: auto;
+  min-height: 0;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 1.25rem 1rem 0.5rem;
   display: flex; flex-direction: column; gap: 0.75rem;
   scroll-behavior: smooth;
@@ -368,7 +411,10 @@ img { display: block; max-width: 100%; }
   padding: 0.75rem 1rem;
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
   max-height: min(60vh, 380px);
+  max-height: min(60dvh, 380px);
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 .action-list { display: flex; flex-direction: column; gap: 0.5rem; }
 .action-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.5rem; }
@@ -628,7 +674,7 @@ img { display: block; max-width: 100%; }
 /* ════════════════════════════════════════════════════════════
    ADMIN PAGE
    ════════════════════════════════════════════════════════════ */
-.admin-layout { display: flex; min-height: 100%; }
+.admin-layout { display: flex; height: 100%; min-height: 0; }
 
 /* ── Sidebar ── */
 .admin-sidebar {
@@ -663,8 +709,9 @@ img { display: block; max-width: 100%; }
 .admin-logout:hover { color: var(--red); }
 
 /* ── Main Content ── */
-.admin-main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100%; }
+.admin-main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 .admin-topbar {
+  flex-shrink: 0;
   position: sticky; top: 0; z-index: 10;
   background: rgba(10,10,10,0.96); border-bottom: 2px solid var(--border);
   backdrop-filter: blur(12px);
@@ -2150,7 +2197,13 @@ img { display: block; max-width: 100%; }
 .adm-shell {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: calc(var(--vh, 1vh) * 100);
+  height: -webkit-fill-available;
+  height: 100dvh;
+  min-height: 0;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
   background: var(--midnight);
 }
 .adm-shell::before {
@@ -2309,7 +2362,7 @@ img { display: block; max-width: 100%; }
 .adm-logout:hover { border-color: var(--chalk); color: var(--chalk); }
 
 /* Main */
-.adm-main { flex: 1; overflow-x: hidden; }
+.adm-main { flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding-bottom: env(safe-area-inset-bottom, 0px); }
 
 /* Dashboard layout */
 .adm-dashboard { padding: 1.5rem 1.25rem; }
@@ -3265,9 +3318,6 @@ img { display: block; max-width: 100%; }
 
 /* ── Mobile: scroll-padding-bottom for inputs ───────────── */
 @media (max-width: 640px) {
-  .booking-page {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-  }
   .action-bar {
     padding-bottom: max(0.75rem, calc(env(safe-area-inset-bottom) + 0.5rem));
   }
@@ -3430,3 +3480,46 @@ img { display: block; max-width: 100%; }
   color: var(--gold); white-space: nowrap;
 }
 
+
+/* App viewport: keep long content scrollable within its screen. */
+.admin-layout {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+.admin-sidebar {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.admin-sidebar__nav, .manual-mobile-nav, .admin-table-wrap,
+.date-scroll, .barber-grid, .barb-history-modal__list {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.manual-mobile-nav { flex-shrink: 0; }
+.manual-content a, .manual-route-path, .manual-table-name { overflow-wrap: anywhere; }
+.manual-content p + p { margin-top: 0.75rem; }
+.manual-page .admin-body { flex-shrink: 0; padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px)); }
+.manual-page .admin-topbar { top: 0; }
+.manual-page .manual-route-item { padding: 0.75rem 1rem; }
+@media (max-width: 767px) {
+  /* Safari focuses fields smaller than 16px with an automatic zoom. */
+  input:not([type="checkbox"]):not([type="radio"]), select, textarea {
+    font-size: max(16px, 1em);
+  }
+  .booking-page [role="button"], .barber-card {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+  }
+  .manual-page .manual-route-item, .manual-page .manual-table-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.375rem;
+  }
+  .manual-page .manual-route-path, .manual-page .manual-table-name {
+    min-width: 0;
+    width: auto;
+  }
+}

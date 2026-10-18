@@ -20,6 +20,13 @@ const PAGES = [
         route: '/agendar',
         label: '/agendar',
       },
+      {
+        icon: 'book',
+        title: 'Manual do Sistema (público)',
+        desc: 'Manual público com caminhos, assistentes e instruções de uso do sistema.',
+        route: '/manual',
+        label: '/manual',
+      },
     ],
   },
   {
@@ -66,13 +73,6 @@ const PAGES = [
         desc: 'Galeria de posts e artes para Instagram — filtrar e baixar individualmente ou em lote.',
         route: '/portal',
         label: '/portal',
-      },
-      {
-        icon: 'book',
-        title: 'Manual do Sistema',
-        desc: 'Tecnologias, usuários, funcionalidades, banco de dados e contato de suporte.',
-        route: '/manual',
-        label: '/manual',
       },
       {
         icon: 'brand',
