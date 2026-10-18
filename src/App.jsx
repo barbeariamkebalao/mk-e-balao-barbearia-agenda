@@ -1,7 +1,8 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect, useState, Suspense, lazy } from 'react'
 import { supabase } from './lib/supabase'
 import ErrorBoundary from './components/ErrorBoundary'
+import AppInstallMetadata from './components/AppInstallMetadata'
 
 // Code splitting — cada rota carrega seu chunk só quando acessada.
 // Reduz bundle inicial de ~588KB para ~180KB (Home+Booking).
@@ -17,8 +18,10 @@ const Portal          = lazy(() => import('./pages/Portal'))
 const Manual          = lazy(() => import('./pages/Manual'))
 const ManualMarca     = lazy(() => import('./pages/ManualMarca'))
 const Hub             = lazy(() => import('./pages/Hub'))
+const AccessGuide     = lazy(() => import('./pages/AccessGuide'))
 
 function RequireAuth({ children, adminOnly = false }) {
+  const location = useLocation()
   const [state, setState] = useState('loading') // loading | authed | denied
   const [barber, setBarber] = useState(null)
 
@@ -54,13 +57,14 @@ function RequireAuth({ children, adminOnly = false }) {
   }, [adminOnly])
 
   if (state === 'loading') return <div className="page-loading">Carregando...</div>
-  if (state === 'denied')  return <Navigate to="/login" replace />
+  if (state === 'denied')  return <Navigate to="/login" state={{ from: location.pathname }} replace />
   return children(barber)
 }
 
 export default function App() {
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <AppInstallMetadata />
       <ErrorBoundary>
         <Suspense fallback={<div className="page-loading">Carregando...</div>}>
           <Routes>
@@ -70,6 +74,11 @@ export default function App() {
             <Route path="/cancelar/:token"    element={<Cancel />} />
             <Route path="/agendar/:slug"      element={<AgendarBarbeiro />} />
             <Route path="/login"              element={<Login />} />
+            <Route path="/admin/acessos"      element={
+              <RequireAuth adminOnly={true}>
+                {() => <AccessGuide />}
+              </RequireAuth>
+            } />
             <Route path="/admin"              element={
               <RequireAuth adminOnly={true}>
                 {(barber) => <Admin barber={barber} />}

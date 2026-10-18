@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0A0A0A" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="MK Admin" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="robots" content="noindex" />
+  <link rel="manifest" href="/admin.webmanifest" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/admin-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/admin-192.png" />
+  <title>Instalar MK Admin — MK e BALÃO</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#0A0A0A;color:#F4F4F2;font:16px/1.6 system-ui,sans-serif;padding:calc(28px + env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) calc(28px + env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left))}main{max-width:620px;margin:auto}img{display:block;width:132px;height:132px;margin:8px auto 24px;border-radius:26px}h1{font-size:30px;line-height:1.15;margin:0 0 12px}h2{font-size:19px;margin:0 0 12px}p{color:#c4c4c4}section{padding:22px;background:#141414;border:1px solid #383838;border-radius:12px;margin:18px 0}li{margin:10px 0}ol{padding-left:22px}button,.button{display:block;width:100%;padding:15px 20px;font:700 16px system-ui,sans-serif;border:1px solid #D32B2F;background:#D32B2F;color:#fff;text-align:center;text-decoration:none;border-radius:6px;cursor:pointer;min-height:48px}button:disabled{opacity:.6;cursor:default}.secondary{background:transparent;border-color:#555;margin-top:12px}.note{font-size:14px}#status{min-height:26px}a{color:#f0cc5c}button,a{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+  </style>
+</head>
+<body><main>
+  <img src="/icons/admin-192.png" alt="Ícone MK e BALÃO Admin" width="132" height="132" />
+  <h1>MK Admin no seu celular</h1>
+  <p>Adicione o painel à tela inicial. O ícone abre a área administrativa; o login continua sendo obrigatório.</p>
+  <button id="install" type="button">Instalar no Android</button>
+  <p id="status" role="status" aria-live="polite">No iPhone, siga as instruções abaixo.</p>
+  <a class="button secondary" href="/admin">Abrir painel administrativo</a>
+  <section><h2>iPhone · Safari</h2><ol>
+    <li>Abra esta página no <strong>Safari</strong>, fora do navegador interno do Instagram ou WhatsApp.</li>
+    <li>Toque em <strong>Compartilhar</strong> e escolha <strong>Adicionar à Tela de Início</strong>.</li>
+    <li>Confira o nome <strong>MK Admin</strong>. Se aparecer a opção Abrir como app, mantenha-a ativada e toque em Adicionar.</li>
+    <li>Abra o novo ícone e entre com sua conta de administrador.</li>
+  </ol></section>
+  <section><h2>Android · Chrome</h2><ol>
+    <li>Abra esta página no <strong>Chrome</strong>.</li>
+    <li>Toque em Instalar no Android. Se o convite não aparecer, abra o menu ⋮ e procure <strong>Instalar app</strong> ou <strong>Adicionar à tela inicial</strong>.</li>
+    <li>Confirme a instalação e abra o ícone MK Admin.</li>
+    <li>Entre com sua conta de administrador.</li>
+  </ol></section>
+  <p class="note">A instalação depende do navegador. Se houver um atalho antigo com outro ícone, remova apenas o atalho e instale novamente por esta página. Mantenha conexão para consultar e alterar a agenda.</p>
+  <p><a href="/manual">Manual público</a> · <a href="/admin/acessos">Guia interno de acessos e testes</a></p>
+</main>
+<script>
+  let installPrompt = null;
+  const installButton = document.getElementById('install');
+  const statusText = document.getElementById('status');
+  function showInstalled() { installButton.disabled = true; installButton.textContent = 'App instalado'; statusText.textContent = 'Abra o painel para continuar.'; }
+  if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) { installButton.hidden = true; statusText.textContent = 'Você está em uma janela de aplicativo. Para adicionar o ícone MK Admin, abra esta página no Safari ou Chrome e siga as instruções abaixo.'; }
+  window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); installPrompt = event; statusText.textContent = 'A instalação está disponível neste navegador.'; });
+  window.addEventListener('appinstalled', () => { installPrompt = null; showInstalled(); });
+  installButton.addEventListener('click', async () => {
+    if (!installPrompt) { statusText.textContent = 'Use o menu do Chrome → Instalar app ou Adicionar à tela inicial. No iPhone, use Compartilhar no Safari.'; return; }
+    const prompt = installPrompt; installPrompt = null;
+    try { await prompt.prompt(); const choice = await prompt.userChoice; statusText.textContent = choice.outcome === 'accepted' ? 'Instalação solicitada. Aguarde o ícone aparecer na tela inicial.' : 'Você pode instalar depois pelo menu do navegador.'; }
+    catch { statusText.textContent = 'Abra o menu do navegador e use Instalar app ou Adicionar à tela inicial.'; }
+  });
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { statusText.textContent = 'Abra esta página com conexão e siga as instruções do seu navegador.'; });
+</script>
+</body></html>

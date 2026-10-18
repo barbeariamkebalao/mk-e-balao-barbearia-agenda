@@ -221,6 +221,7 @@ export default function Admin({ barber }) {
   ]
 
   const NAV_EXTERNAL = [
+    { icon: '🔑', label: 'Acessos e testes', desc: 'Contas, caminhos e roteiro inicial', path: '/admin/acessos' },
     { icon: '📲', label: 'Social Media', desc: 'Posts e conteúdo visual',   path: '/portal' },
     { icon: '📖', label: 'Manual',       desc: 'Guia de uso da marca',      path: '/manual' },
     { icon: '🎨', label: 'Marca',        desc: 'Identidade visual',         path: '/marca'  },

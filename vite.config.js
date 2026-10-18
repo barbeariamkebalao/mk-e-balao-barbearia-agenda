@@ -19,6 +19,7 @@ export default defineConfig({
       ],
 
       manifest: {
+        id: '/login',
         name: 'MK e BALÃO Barbearia',
         short_name: 'MK e Balão',
         description: 'Agendamentos e gestão — MK e BALÃO Barbearia, Piraju-SP',
@@ -32,17 +33,18 @@ export default defineConfig({
         categories: ['business', 'productivity'],
         icons: [
           {
-            src: '/logo-escudo.jpg',
+            src: '/icons/agenda-192.png',
             sizes: '192x192',
-            type: 'image/jpeg',
+            type: 'image/png',
             purpose: 'any',
           },
           {
-            src: '/logo-escudo.jpg',
+            src: '/icons/agenda-512.png',
             sizes: '512x512',
-            type: 'image/jpeg',
-            purpose: 'any maskable',
+            type: 'image/png',
+            purpose: 'any',
           },
+          { src: '/icons/agenda-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
         shortcuts: [
           {
@@ -50,21 +52,22 @@ export default defineConfig({
             short_name: 'Agenda',
             description: 'Ver agendamentos do dia',
             url: '/barbeiro',
-            icons: [{ src: '/logo-escudo.jpg', sizes: '192x192' }],
+            icons: [{ src: '/icons/agenda-192.png', sizes: '192x192', type: 'image/png' }],
           },
           {
             name: 'Agendar',
             short_name: 'Agendar',
             description: 'Fazer um agendamento',
             url: '/agendar',
-            icons: [{ src: '/logo-escudo.jpg', sizes: '192x192' }],
+            icons: [{ src: '/icons/agenda-192.png', sizes: '192x192', type: 'image/png' }],
           },
         ],
       },
 
       workbox: {
+        navigateFallbackDenylist: [/^\/instalar-admin\.html$/],
         // Pré-cacheia assets do build — exclui imagens pesadas de social media
-        globPatterns: ['**/*.{js,css,html,ico,svg,woff2}', '*.{png,jpg}'],
+        globPatterns: ['**/*.{js,css,html,ico,svg,woff2}', '*.{png,jpg}', 'icons/*.png', '*.webmanifest'],
         globIgnores: ['social-media/**'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
 

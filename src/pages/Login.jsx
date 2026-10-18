@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 export default function Login() {
@@ -12,6 +12,13 @@ export default function Login() {
   const [resetSent,   setResetSent]   = useState(false)
   const [resetLoading,setResetLoading]= useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
+  function destination(role) {
+    const allowed = role === 'admin'
+      ? ['/admin', '/admin/acessos', '/hub', '/portal', '/marca']
+      : ['/barbeiro', '/hub', '/portal', '/marca']
+    return allowed.includes(location.state?.from) ? location.state.from : role === 'admin' ? '/admin' : '/barbeiro'
+  }
 
   // Redireciona se já estiver autenticado E vinculado a um barbeiro
   useEffect(() => {
@@ -22,7 +29,7 @@ export default function Login() {
       const { data: barber } = await supabase
         .from('barbers').select('role').eq('user_id', session.user.id).single()
       if (!barber) return  // autenticado mas sem vínculo — fica no login, não entra em loop
-      navigate(barber.role === 'admin' ? '/admin' : '/barbeiro', { replace: true })
+      navigate(destination(barber.role), { replace: true })
     }
     checkSession()
   }, [])
@@ -59,7 +66,7 @@ export default function Login() {
     }
 
     setLoading(false)
-    navigate(barber.role === 'admin' ? '/admin' : '/barbeiro')
+    navigate(destination(barber.role))
   }
 
   return (

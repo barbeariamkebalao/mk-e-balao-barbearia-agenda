@@ -27,6 +27,11 @@ const PAGES = [
         route: '/manual',
         label: '/manual',
       },
+      {
+        icon: 'home', title: 'Instalar MK Admin',
+        desc: 'Ícone administrativo e instruções para iPhone e Android.',
+        route: '/instalar-admin.html', label: '/instalar-admin.html',
+      },
     ],
   },
   {
@@ -87,6 +92,11 @@ const PAGES = [
     group: 'Interno — Admin',
     badge: 'admin',
     items: [
+      {
+        icon: 'lock', title: 'Acessos e testes',
+        desc: 'Guia protegido de contas, caminhos, testes iniciais e usabilidade.',
+        route: '/admin/acessos', label: '/admin/acessos',
+      },
       {
         icon: 'shield',
         title: 'Painel Admin',
@@ -189,7 +199,7 @@ export default function Hub({ barber }) {
                 <button
                   key={item.route}
                   className="hub-card"
-                  onClick={() => navigate(item.route)}
+                  onClick={() => item.route.endsWith('.html') ? window.location.assign(item.route) : navigate(item.route)}
                 >
                   <div className="hub-card__top">
                     <span className="hub-card__icon"><Icon name={item.icon} /></span>

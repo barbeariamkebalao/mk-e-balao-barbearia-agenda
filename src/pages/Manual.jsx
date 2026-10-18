@@ -20,6 +20,8 @@ const ROUTES = [
   ['/cancelar/:token', 'Cancelamento', 'Link individual', 'Use o link da reserva. O token é pessoal e não deve ser publicado.'],
   ['/login', 'Entrada da equipe', 'Público', 'Login por e-mail e senha e recuperação de acesso.'],
   ['/admin', 'Administrador geral', 'Login de admin', 'Agenda completa, relatórios e gestão da barbearia.'],
+  ['/admin/acessos', 'Acessos e testes', 'Login de admin', 'Contas e senhas registradas no cadastro protegido, links e roteiro inicial.'],
+  ['/instalar-admin.html', 'Instalar MK Admin', 'Público', 'Ícone administrativo e instruções para iPhone e Android.'],
   ['/barbeiro', 'Painel do barbeiro', 'Login', 'Agenda e configurações do profissional autenticado.'],
   ['/portal', 'Social Media', 'Login', 'Conteúdo visual disponível para a equipe consultar e baixar.'],
   ['/manual', 'Manual do sistema', 'Público', 'Guia dos caminhos, recursos e instruções de uso.'],
@@ -61,6 +63,11 @@ const FALLBACK_BARBERS = [
   { name: 'Gabriel Oliveira', slug: 'gabriel' },
 ]
 
+function RouteLink({ path }) {
+  return path.endsWith('.html')
+    ? <a className="manual-route-path manual-info-link" href={path}>{path}</a>
+    : <Link className="manual-route-path manual-info-link" to={path}>{path}</Link>
+}
 function Card({ title, children }) {
   return <section className="manual-card"><h2 className="manual-card__title">{title}</h2>{children}</section>
 }
@@ -104,7 +111,7 @@ export default function Manual() {
       <div className="admin-body"><div className="manual-content">
         <p className="manual-note">MK e BALÃO Barbearia · Guia público de uso · Atualizado em 18/10/2026.</p>
         {section === 'caminhos' && <>
-          <Card title="Todos os caminhos do sistema"><p>Os links públicos abrem sem cadastro. As áreas internas solicitam login e respeitam o perfil do usuário.</p><div className="manual-routes-list">{ROUTES.map(([path, title, access, description]) => <div className="manual-route-item" key={path}>{path.includes(':') ? <code className="manual-route-path">{path}</code> : <Link className="manual-route-path manual-info-link" to={path}>{path}</Link>}<span className="manual-route-desc"><strong>{title} · {access}</strong><br />{description}</span></div>)}</div></Card>
+          <Card title="Todos os caminhos do sistema"><p>Os links públicos abrem sem cadastro. As áreas internas solicitam login e respeitam o perfil do usuário.</p><div className="manual-routes-list">{ROUTES.map(([path, title, access, description]) => <div className="manual-route-item" key={path}>{path.includes(':') ? <code className="manual-route-path">{path}</code> : <RouteLink path={path} />}<span className="manual-route-desc"><strong>{title} · {access}</strong><br />{description}</span></div>)}</div></Card>
           <Card title="Primeiro agendamento"><Steps items={[
             'Abra o assistente geral ou o link individual do profissional.',
             'Informe nome completo e WhatsApp com DDD. No retorno, confira o cliente salvo neste aparelho.',
@@ -125,7 +132,7 @@ export default function Manual() {
             'O administrador é direcionado a /admin; o barbeiro, a /barbeiro.',
             'Ao terminar em um aparelho compartilhado, use Sair no painel.',
           ]} /></Card>
-          <Card title="Login do administrador geral"><p><Link className="manual-info-link" to="/login">Entrar como administrador</Link> · <Link className="manual-info-link" to="/admin">Abrir painel geral</Link>.</p><p>E-mail de referência registrado na documentação do projeto: <strong>admin@mkebalaobarbearia.com.br</strong>. Confirme com o responsável se esse cadastro foi alterado.</p><p>A senha é individual e não é publicada neste manual. Use Esqueci minha senha na tela de login quando necessário.</p></Card>
+          <Card title="Login do administrador geral"><p><Link className="manual-info-link" to="/login">Entrar como administrador</Link> · <Link className="manual-info-link" to="/admin">Abrir painel geral</Link> · <Link className="manual-info-link" to="/admin/acessos">Guia interno de acessos e testes</Link>.</p><p>E-mail de referência registrado na documentação do projeto: <strong>admin@mkebalaobarbearia.com.br</strong>. Confirme com o responsável se esse cadastro foi alterado.</p><p>O guia interno reúne os e-mails e senhas conhecidos registrados pelo administrador. A senha não é publicada neste manual. Use Esqueci minha senha na tela de login quando necessário.</p></Card>
           <Card title="Acesso dos barbeiros"><p>Cada profissional usa o e-mail vinculado à própria conta e sua senha em <Link className="manual-info-link" to="/login">/login</Link>. O painel está em <Link className="manual-info-link" to="/barbeiro">/barbeiro</Link>. Os assistentes são públicos e não dão acesso ao painel.</p></Card>
           <Card title="Recuperar ou criar um acesso"><p>Em /login, escolha Esqueci minha senha e informe o e-mail cadastrado. Para uma nova conta ou para a mensagem Usuário não configurado, peça ao administrador que vincule o usuário ao cadastro do profissional. Criar somente o perfil em Equipe não cria o acesso.</p></Card>
         </>}

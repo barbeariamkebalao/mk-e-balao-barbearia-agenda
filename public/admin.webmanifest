@@ -1,0 +1,23 @@
+{
+  "id": "/admin",
+  "name": "MK e BALÃO — Admin",
+  "short_name": "MK Admin",
+  "description": "Administração da MK e BALÃO Barbearia",
+  "lang": "pt-BR",
+  "start_url": "/admin",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#0A0A0A",
+  "background_color": "#0A0A0A",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {"src":"/icons/admin-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"/icons/admin-512.png","sizes":"512x512","type":"image/png","purpose":"any"},
+    {"src":"/icons/admin-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}
+  ],
+  "shortcuts": [
+    {"name":"Painel geral","url":"/admin","icons":[{"src":"/icons/admin-192.png","sizes":"192x192","type":"image/png"}]},
+    {"name":"Acessos e testes","url":"/admin/acessos","icons":[{"src":"/icons/admin-192.png","sizes":"192x192","type":"image/png"}]}
+  ]
+}
