@@ -32,9 +32,8 @@ export default defineConfig({
         scope: '/',
         categories: ['business', 'productivity'],
         icons: [
-          { src: '/icons/admin-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-          { src: '/icons/admin-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-          { src: '/icons/admin-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: '/logo-escudo.jpg', sizes: '192x192', type: 'image/jpeg', purpose: 'any' },
+          { src: '/logo-escudo.jpg', sizes: '512x512', type: 'image/jpeg', purpose: 'any maskable' },
         ],
         shortcuts: [
           {
@@ -42,14 +41,14 @@ export default defineConfig({
             short_name: 'Agenda',
             description: 'Ver agendamentos do dia',
             url: '/barbeiro',
-            icons: [{ src: '/icons/admin-192.png', sizes: '192x192', type: 'image/png' }],
+            icons: [{ src: '/logo-escudo.jpg', sizes: '192x192' }],
           },
           {
             name: 'Agendar',
             short_name: 'Agendar',
             description: 'Fazer um agendamento',
             url: '/agendar',
-            icons: [{ src: '/icons/admin-192.png', sizes: '192x192', type: 'image/png' }],
+            icons: [{ src: '/logo-escudo.jpg', sizes: '192x192' }],
           },
         ],
       },
