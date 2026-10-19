@@ -1,4 +1,22 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=Permanent+Marker&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+/* Lettering reconstruído da marca — estudo 0.1, peso único. */
+@font-face {
+  font-family: 'MK Balao Lettering Estudo';
+  src: url('/fonts/MK-Balao-Lettering-Estudo-Regular.woff2') format('woff2'),
+       url('/fonts/MK-Balao-Lettering-Estudo-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+.font-brush {
+  font-synthesis: none;
+  font-kerning: normal;
+  font-feature-settings: 'kern' 1, 'calt' 1;
+  line-height: 1.3;
+}
+
 
 @tailwind base;
 @tailwind components;
@@ -25,7 +43,7 @@
 
   --font-heading: 'Oswald', sans-serif;
   --font-body:    'Inter', sans-serif;
-  --font-brush:   'Permanent Marker', cursive;
+  --font-brush:   'MK Balao Lettering Estudo', 'Oswald', sans-serif;
 
   --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --radius: 0px;

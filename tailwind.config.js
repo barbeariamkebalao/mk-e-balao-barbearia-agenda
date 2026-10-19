@@ -17,7 +17,7 @@ export default {
         surface:  '#141414',
       },
       fontFamily: {
-        'brush':          ['"Permanent Marker"', 'cursive'],
+        'brush':          ['"MK Balao Lettering Estudo"', '"Oswald"', 'sans-serif'],
         'sans-condensed': ['"Oswald"', 'sans-serif'],
         'sans-body':      ['"Inter"', 'sans-serif'],
       },

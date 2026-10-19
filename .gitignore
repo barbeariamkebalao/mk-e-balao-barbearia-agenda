@@ -13,6 +13,12 @@ dist/
 .DS_Store
 Thumbs.db
 
+# seed runner — contém service_role key, não commitar
+seed-runner.js
+
+# claude
+.claude/
+
 # editor
 .vscode/
 .idea/

@@ -282,12 +282,13 @@ export default function ManualMarca({ role = 'admin' }) {
           <div className="mm-typo-list">
             <div className="mm-typo-card">
               <div className="mm-typo-card__meta">
-                <span className="mm-typo-card__role">Títulos / Marca</span>
-                <span className="mm-typo-card__family">Permanent Marker</span>
+                <span className="mm-typo-card__role">Títulos / Lettering da marca</span>
+                <span className="mm-typo-card__family">MK Balao Lettering Estudo</span>
               </div>
               <div className="mm-typo-card__sample">
-                <p style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '3rem', lineHeight: 1, color: 'var(--chalk)' }}>MK e BALÃO</p>
-                <p style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '1.2rem', color: 'rgba(244,244,242,0.5)' }}>Barbearia • Piraju</p>
+                <p style={{ fontFamily: "'MK Balao Lettering Estudo', 'Oswald', sans-serif", fontSize: '3rem', lineHeight: 1.3, color: 'var(--chalk)' }}>MK e BALÃO</p>
+                <p style={{ fontFamily: "'MK Balao Lettering Estudo', 'Oswald', sans-serif", fontSize: '1.2rem', color: 'rgba(244,244,242,0.5)' }}>Barbearia • Piraju</p>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.75rem', lineHeight: 1.6, color: 'rgba(244,244,242,0.5)', marginTop: '1rem' }}>Reconstrução de estudo 0.1 a partir do lettering. Minúsculas usam formas maiúsculas. O logotipo original permanece como assinatura.</p>
               </div>
             </div>
             <div className="mm-typo-card">
